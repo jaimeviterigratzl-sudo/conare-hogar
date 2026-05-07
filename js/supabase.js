@@ -4,15 +4,11 @@
    ============================================ */
 
 /* Carga la librería de Supabase desde CDN */
-const _supabaseScript = document.createElement('script');
-_supabaseScript.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js';
-document.head.appendChild(_supabaseScript);
-
 let supabase;
-_supabaseScript.onload = () => {
+document.addEventListener('DOMContentLoaded', () => {
   supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
-  App.init(); // inicia la app una vez que Supabase está listo
-};
+  App.init();
+});
 
 /* ── Usuarios ────────────────────────────── */
 const DB = {
