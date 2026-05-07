@@ -5,16 +5,278 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <meta name="theme-color" content="#1D9E75">
   <meta name="apple-mobile-web-app-capable" content="yes">
-  <meta name="apple-mobile-web-app-status-bar-style" content="default">
   <meta name="apple-mobile-web-app-title" content="CONARE HOGAR">
-  <meta name="description" content="Servicio de reciclaje domiciliario a domicilio en Chile">
+  <meta name="description" content="Servicio de reciclaje domiciliario en Chile">
   <title>CONARE HOGAR</title>
-  <link rel="manifest" href="/manifest.json">
-  <link rel="apple-touch-icon" href="/icons/icon-192.png">
-  <link rel="icon" type="image/png" href="/icons/icon-192.png">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-  <link rel="stylesheet" href="/css/app.css">
+  <style>
+/* ============================================
+   CONARE HOGAR — CSS Principal
+   Mobile-first PWA, optimizado para iOS y Android
+   ============================================ */
+
+/* Reset y base */
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+html { font-size: 16px; height: 100%; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f0; color: #1a1a1a; min-height: 100%; line-height: 1.5; -webkit-font-smoothing: antialiased; }
+a { color: #1D9E75; text-decoration: none; }
+button { font-family: inherit; cursor: pointer; }
+input, select, textarea { font-family: inherit; font-size: 16px; }
+
+/* Colores marca */
+:root {
+  --verde: #1D9E75;
+  --verde-dark: #0F6E56;
+  --verde-light: #E1F5EE;
+  --verde-text: #085041;
+  --azul-light: #E6F1FB;
+  --azul-text: #0C447C;
+  --amber-light: #FAEEDA;
+  --amber-text: #633806;
+  --rojo-light: #FCEBEB;
+  --rojo-text: #791F1F;
+  --gris-light: #F1EFE8;
+  --gris-text: #444441;
+  --purp-light: #EEEDFE;
+  --purp-text: #3C3489;
+  --border: rgba(0,0,0,0.12);
+  --border-md: rgba(0,0,0,0.2);
+  --bg-secondary: #f8f8f6;
+  --radius: 12px;
+  --radius-sm: 8px;
+  --shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+/* App shell */
+#app { display: flex; flex-direction: column; min-height: 100dvh; max-width: 480px; margin: 0 auto; background: #f5f5f0; }
+
+/* TOP BAR */
+.topbar { background: #fff; border-bottom: 0.5px solid var(--border); padding: 0 16px; display: flex; align-items: center; height: 52px; gap: 10px; position: sticky; top: 0; z-index: 100; }
+.logo { display: flex; align-items: center; gap: 8px; font-weight: 500; font-size: 16px; flex: 1; }
+.logo-icon { width: 30px; height: 30px; background: var(--verde); border-radius: 10px; display: flex; align-items: center; justify-content: center; color: #fff; font-size: 16px; }
+.topbar-right { display: flex; align-items: center; gap: 8px; }
+.topbar-avatar { width: 32px; height: 32px; border-radius: 50%; background: var(--verde-light); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; color: var(--verde-text); }
+.topbar-admin-btn { display: flex; align-items: center; gap: 5px; padding: 6px 12px; border-radius: 20px; border: 0.5px solid var(--border-md); background: #fff; color: #1a1a1a; font-size: 12px; font-weight: 500; min-height: 32px; }
+
+/* MAIN CONTENT */
+main { flex: 1; overflow-y: auto; }
+
+/* SCREENS */
+.screen { display: none; padding: 14px 16px 80px; animation: fadeIn 0.2s ease; }
+.screen.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(4px); } to { opacity: 1; transform: translateY(0); } }
+
+/* BOTTOM NAV */
+.bottom-nav { background: #fff; border-top: 0.5px solid var(--border); display: flex; padding: 6px 0 env(safe-area-inset-bottom, 8px); position: sticky; bottom: 0; z-index: 100; }
+.nav-btn { flex: 1; display: flex; flex-direction: column; align-items: center; gap: 2px; border: none; background: none; color: #888; font-size: 10px; padding: 4px 0; min-height: 48px; justify-content: center; border-top: 2px solid transparent; transition: color 0.15s; }
+.nav-btn i { font-size: 22px; }
+.nav-btn.active { color: var(--verde); border-top-color: var(--verde); }
+
+/* WELCOME SCREEN */
+.welcome-hero { text-align: center; padding: 48px 24px 32px; }
+.hero-icon { width: 80px; height: 80px; background: var(--verde); border-radius: 24px; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+.hero-icon i { font-size: 40px; color: #fff; }
+.welcome-hero h1 { font-size: 28px; font-weight: 500; margin-bottom: 10px; }
+.welcome-hero p { font-size: 15px; color: #666; line-height: 1.6; }
+.welcome-actions { padding: 0 16px; }
+.welcome-legal { text-align: center; font-size: 11px; color: #999; margin-top: 16px; padding: 0 24px; }
+
+/* SCREEN HEADERS */
+.screen-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+.screen-header h2 { font-size: 18px; font-weight: 500; }
+.btn-back { width: 36px; height: 36px; border-radius: 50%; border: 0.5px solid var(--border-md); background: #fff; display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+.screen-title { font-size: 18px; font-weight: 500; margin-bottom: 4px; }
+.screen-sub { font-size: 13px; color: #666; margin-bottom: 14px; }
+
+/* CARDS */
+.card { background: #fff; border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; }
+.card-title { font-size: 13px; font-weight: 500; margin-bottom: 10px; display: flex; align-items: center; gap: 7px; }
+.card-title i { font-size: 16px; color: var(--verde); }
+.card-sub { font-size: 12px; color: #666; margin-bottom: 6px; }
+
+/* FORMULARIOS */
+.form-card { background: #fff; border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 10px; }
+.form-group { display: flex; flex-direction: column; gap: 4px; margin-bottom: 12px; }
+.form-group label { font-size: 12px; color: #666; font-weight: 500; }
+.form-group input, .form-group select { padding: 11px 12px; border: 0.5px solid var(--border-md); border-radius: var(--radius-sm); font-size: 16px; background: #fff; color: #1a1a1a; width: 100%; min-height: 44px; -webkit-appearance: none; appearance: none; }
+.form-group input:focus, .form-group select:focus { outline: none; border-color: var(--verde); box-shadow: 0 0 0 3px rgba(29,158,117,0.1); }
+.row-2 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 10px; }
+
+/* BOTONES */
+.btn { display: inline-flex; align-items: center; justify-content: center; gap: 6px; padding: 11px 16px; border-radius: var(--radius-sm); font-size: 15px; border: 0.5px solid var(--border-md); background: #fff; color: #1a1a1a; font-weight: 500; min-height: 44px; transition: background 0.12s, transform 0.1s; }
+.btn:active { transform: scale(0.98); }
+.btn-primary { background: var(--verde); color: #fff; border-color: var(--verde); }
+.btn-primary:hover { background: var(--verde-dark); }
+.btn-danger { background: var(--rojo-light); color: var(--rojo-text); border-color: #F09595; }
+.btn-full { width: 100%; }
+.btn-link { display: block; text-align: center; color: var(--verde); font-size: 13px; padding: 10px; border: none; background: none; margin-top: 4px; }
+.flex-1 { flex: 1; }
+
+/* BADGES */
+.badge { display: inline-flex; align-items: center; gap: 3px; padding: 3px 10px; border-radius: 20px; font-size: 11px; font-weight: 500; }
+.badge-green { background: var(--verde-light); color: var(--verde-text); }
+.badge-blue { background: var(--azul-light); color: var(--azul-text); }
+.badge-amber { background: var(--amber-light); color: var(--amber-text); }
+.badge-red { background: var(--rojo-light); color: var(--rojo-text); }
+.badge-gray { background: var(--gris-light); color: var(--gris-text); }
+.badge-purple { background: var(--purp-light); color: var(--purp-text); }
+
+/* ALERTS */
+.alert { padding: 10px 12px; border-radius: var(--radius-sm); font-size: 13px; margin-bottom: 10px; display: flex; align-items: flex-start; gap: 8px; }
+.alert-error { background: var(--rojo-light); color: var(--rojo-text); border: 0.5px solid #F09595; }
+.alert-success { background: var(--verde-light); color: var(--verde-text); border: 0.5px solid #5DCAA5; }
+.alert-info { background: var(--azul-light); color: var(--azul-text); border: 0.5px solid #85B7EB; }
+
+/* TOAST */
+.toast { display: flex; align-items: flex-start; gap: 10px; padding: 12px 14px; border-radius: var(--radius); font-size: 13px; margin-bottom: 10px; }
+.toast-info { background: var(--verde); color: #fff; }
+.toast p { font-size: 11px; opacity: 0.9; margin-top: 2px; }
+.toast strong { font-size: 13px; }
+.toast-close { margin-left: auto; background: none; border: none; color: #fff; opacity: 0.7; font-size: 16px; padding: 0; min-height: auto; }
+
+/* STEPS REGISTRO */
+.step-bar { display: flex; align-items: center; margin-bottom: 16px; padding: 0 4px; }
+.step-item { display: flex; flex-direction: column; align-items: center; gap: 3px; }
+.step-num { width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; background: #f0f0ee; border: 0.5px solid var(--border); color: #888; }
+.step-item.active .step-num { background: var(--verde-light); color: var(--verde-dark); border-color: #5DCAA5; }
+.step-item.done .step-num { background: var(--verde); color: #fff; border-color: var(--verde); }
+.step-label { font-size: 10px; color: #888; }
+.step-item.active .step-label { color: var(--verde); font-weight: 500; }
+.step-line { flex: 1; height: 0.5px; background: var(--border); margin: 0 4px; margin-bottom: 14px; }
+.step-actions { display: flex; gap: 8px; margin-top: 6px; }
+.step-title { font-size: 16px; font-weight: 500; margin-bottom: 12px; }
+
+/* PLANES */
+.plan-card { background: #fff; border: 0.5px solid var(--border); border-radius: var(--radius); padding: 14px; margin-bottom: 8px; cursor: pointer; position: relative; transition: border-color 0.15s; }
+.plan-card.selected, .plan-card.sel { border: 2px solid var(--verde); }
+.plan-popular { position: absolute; top: -10px; right: 12px; background: var(--verde); color: #fff; font-size: 10px; font-weight: 500; padding: 2px 10px; border-radius: 20px; }
+.plan-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
+.plan-nombre { font-size: 15px; font-weight: 500; }
+.plan-precio { font-size: 20px; font-weight: 500; color: var(--verde); margin-top: 2px; }
+.plan-precio span { font-size: 12px; color: #666; font-weight: 400; }
+.plan-features { display: flex; flex-direction: column; gap: 5px; margin-top: 8px; }
+.plan-feat { display: flex; align-items: center; gap: 7px; font-size: 13px; color: #555; }
+.plan-feat i { font-size: 14px; color: var(--verde); flex-shrink: 0; }
+
+/* MAPA PLACEHOLDER */
+.map-placeholder { background: var(--verde-light); border-radius: var(--radius-sm); height: 150px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 6px; color: var(--verde-dark); font-size: 13px; cursor: pointer; border: 0.5px solid #5DCAA5; margin-top: 6px; }
+.map-placeholder i { font-size: 32px; }
+.map-placeholder.pinned { color: var(--verde); }
+.map-placeholder.pinned i { color: #E24B4A; }
+
+/* RESUMEN PLAN */
+.resumen-plan { background: var(--bg-secondary); border-radius: var(--radius-sm); padding: 12px; margin-bottom: 12px; }
+.resumen-row { display: flex; justify-content: space-between; font-size: 13px; padding: 5px 0; border-bottom: 0.5px solid var(--border); }
+.resumen-row:last-child { border-bottom: none; }
+.resumen-row.muted span { color: #888; }
+
+/* INFO BOX */
+.info-box { background: var(--verde-light); border-radius: var(--radius-sm); padding: 10px 12px; font-size: 12px; color: var(--verde-text); margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+.info-box i { font-size: 16px; flex-shrink: 0; }
+.legal-small { font-size: 11px; color: #999; text-align: center; margin-top: 8px; line-height: 1.4; }
+
+/* STATS */
+.stat-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 10px; }
+.stat-grid-4 { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin-bottom: 12px; }
+.stat-card { background: var(--bg-secondary); border-radius: var(--radius-sm); padding: 12px; text-align: center; }
+.stat-card.clickable { cursor: pointer; }
+.stat-val { font-size: 24px; font-weight: 500; color: var(--verde); }
+.stat-lbl { font-size: 11px; color: #666; margin-top: 2px; }
+.dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+
+/* HOME DASHBOARD */
+.home-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+.home-header h2 { font-size: 18px; font-weight: 500; }
+.home-sub { font-size: 12px; color: #666; margin-top: 3px; }
+
+/* RETIRO */
+.retiro-info { display: flex; align-items: flex-start; gap: 12px; margin-bottom: 12px; }
+.retiro-icon { width: 42px; height: 42px; border-radius: 50%; background: var(--verde-light); display: flex; align-items: center; justify-content: center; color: var(--verde); font-size: 20px; flex-shrink: 0; }
+.retiro-detalle { flex: 1; }
+.retiro-fecha { font-weight: 500; font-size: 14px; }
+.retiro-sub { font-size: 12px; color: #666; margin-top: 2px; }
+.retiro-actions { display: flex; gap: 8px; }
+
+/* UPLOAD FOTOS */
+.upload-zone { border: 1.5px dashed var(--border-md); border-radius: var(--radius-sm); padding: 20px; text-align: center; cursor: pointer; color: #666; }
+.upload-zone i { font-size: 34px; color: var(--verde); display: block; margin: 0 auto 6px; }
+.upload-zone span { display: block; font-size: 14px; }
+.upload-hint { font-size: 11px; color: #999; margin-top: 4px; }
+.photo-grid { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.photo-thumb { width: 72px; height: 72px; border-radius: var(--radius-sm); border: 0.5px solid var(--border); overflow: hidden; position: relative; }
+.photo-thumb img { width: 100%; height: 100%; object-fit: cover; }
+.photo-del { position: absolute; top: 3px; right: 3px; width: 18px; height: 18px; background: rgba(0,0,0,0.55); border-radius: 50%; display: flex; align-items: center; justify-content: center; cursor: pointer; color: #fff; font-size: 9px; border: none; }
+
+/* CHIPS */
+.chip-row { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 12px; }
+.chip { display: flex; align-items: center; gap: 5px; padding: 8px 12px; border-radius: 20px; border: 0.5px solid var(--border-md); font-size: 13px; cursor: pointer; background: #fff; min-height: 36px; color: #1a1a1a; transition: all 0.12s; }
+.chip.active { background: var(--verde-light); border-color: #5DCAA5; color: var(--verde-text); font-weight: 500; }
+
+/* TRUCK MAP */
+.truck-map { background: var(--verde-light); border-radius: var(--radius); height: 200px; position: relative; overflow: hidden; border: 0.5px solid #5DCAA5; margin-bottom: 10px; }
+.road { position: absolute; background: rgba(255,255,255,0.5); }
+.road-h { width: 100%; height: 5px; }
+.road-v { width: 5px; height: 100%; top: 0; }
+.home-pin { position: absolute; bottom: 28%; left: 46%; font-size: 20px; }
+.truck-pin { position: absolute; width: 34px; height: 34px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 18px; cursor: pointer; border: 2px solid #fff; transition: transform 0.3s; }
+.truck-pin:hover { transform: scale(1.15); }
+.truck-label { position: absolute; background: #fff; border-radius: 6px; padding: 1px 6px; font-size: 10px; font-weight: 500; top: -18px; left: 50%; transform: translateX(-50%); white-space: nowrap; color: #1a1a1a; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+.truck-info-box { background: rgba(255,255,255,0.95); border: 0.5px solid var(--border); border-radius: var(--radius-sm); padding: 10px 14px; font-size: 13px; margin-bottom: 10px; display: flex; align-items: center; gap: 8px; color: #555; }
+
+/* PLAN ACTIVO */
+.plan-activo-header { display: flex; align-items: flex-start; justify-content: space-between; margin-bottom: 12px; }
+.plan-activo-nombre { font-size: 15px; font-weight: 500; }
+.plan-activo-desde { font-size: 11px; color: #888; margin-top: 3px; }
+.plan-detalle { background: var(--bg-secondary); border-radius: var(--radius-sm); padding: 12px; }
+.plan-det-row { display: flex; justify-content: space-between; font-size: 13px; padding: 6px 0; border-bottom: 0.5px solid var(--border); }
+.plan-det-row:last-child { border-bottom: none; }
+.plan-det-row span { color: #666; }
+
+/* PERFIL */
+.perfil-header { display: flex; align-items: center; gap: 12px; margin-bottom: 14px; }
+.perfil-avatar { width: 52px; height: 52px; border-radius: 50%; background: var(--verde-light); display: flex; align-items: center; justify-content: center; font-size: 18px; font-weight: 500; color: var(--verde-text); flex-shrink: 0; }
+.perfil-nombre { font-size: 16px; font-weight: 500; }
+.perfil-email { font-size: 13px; color: #666; margin-top: 2px; }
+
+/* ADMIN */
+.admin-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px; }
+.admin-header h2 { font-size: 18px; font-weight: 500; }
+.admin-tabs { display: flex; border-bottom: 0.5px solid var(--border); margin-bottom: 12px; overflow-x: auto; }
+.admin-tab { padding: 9px 14px; font-size: 13px; border: none; background: none; cursor: pointer; color: #666; border-bottom: 2px solid transparent; white-space: nowrap; min-height: 40px; font-family: inherit; }
+.admin-tab.active { color: var(--verde); border-bottom-color: var(--verde); font-weight: 500; }
+.admin-panel { display: none; }
+.admin-panel.active { display: block; }
+.search-input { width: 100%; padding: 10px 12px; border: 0.5px solid var(--border-md); border-radius: var(--radius-sm); font-size: 14px; background: #fff; color: #1a1a1a; margin-bottom: 10px; }
+.client-row { display: flex; align-items: center; gap: 10px; padding: 10px 0; border-bottom: 0.5px solid var(--border); }
+.client-row:last-child { border-bottom: none; }
+.client-avatar { width: 36px; height: 36px; border-radius: 50%; background: var(--verde-light); display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 500; color: var(--verde-text); flex-shrink: 0; }
+.client-info { flex: 1; min-width: 0; }
+.client-name { font-weight: 500; font-size: 13px; }
+.client-sub { font-size: 11px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.route-block { background: var(--bg-secondary); border-radius: var(--radius-sm); padding: 10px; margin-bottom: 8px; }
+.route-day { font-weight: 500; font-size: 13px; margin-bottom: 6px; }
+.route-stop { display: flex; align-items: center; gap: 7px; font-size: 12px; color: #555; padding: 3px 0; }
+.route-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; }
+.revenue-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 0.5px solid var(--border); font-size: 13px; }
+.revenue-row:last-child { border-bottom: none; }
+
+/* DIVIDER */
+.divider { border: none; border-top: 0.5px solid var(--border); margin: 12px 0; }
+
+/* EMPTY STATE */
+.empty-state { text-align: center; padding: 24px; color: #888; font-size: 13px; }
+
+/* LOADING */
+.loading { display: flex; align-items: center; justify-content: center; padding: 24px; color: #888; font-size: 13px; gap: 8px; }
+.spinner { width: 18px; height: 18px; border: 2px solid var(--border-md); border-top-color: var(--verde); border-radius: 50%; animation: spin 0.7s linear infinite; }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* PWA safe areas */
+@supports (padding-bottom: env(safe-area-inset-bottom)) {
+  .bottom-nav { padding-bottom: calc(env(safe-area-inset-bottom) + 6px); }
+}
+  </style>
 </head>
 <body>
 
@@ -481,17 +743,1129 @@
   </div><!-- /#app -->
 
   <!-- Scripts -->
-<script src="/js/config.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
-<script src="/js/supabase.js"></script>
-<script src="/js/app.js"></script>
-<script src="/js/auth.js"></script>
-<script src="/js/registro.js"></script>
-<script src="/js/pago.js"></script>
-<script src="/js/retiro.js"></script>
-<script src="/js/fotos.js"></script>
-<script src="/js/camiones.js"></script>
-<script src="/js/admin.js"></script>
-<script src="/js/sw-register.js"></script>
+<script>
+/* === config.js === */
+/* ============================================
+   CONARE HOGAR — Configuración
+   ⚠️  RELLENA ESTOS VALORES CON TUS CREDENCIALES
+   ============================================ */
+
+const CONFIG = {
+
+  /* ── SUPABASE ──────────────────────────────
+     Obtén estos valores en:
+     supabase.com → tu proyecto → Settings → API
+  ─────────────────────────────────────────── */
+  SUPABASE_URL:  'https://TU_PROYECTO.supabase.co',
+  SUPABASE_KEY:  'TU_SUPABASE_ANON_KEY',
+
+  /* ── FLOW ──────────────────────────────────
+     Obtén estos valores en:
+     flow.cl → Panel → Credenciales API
+  ─────────────────────────────────────────── */
+  FLOW_API_KEY:    'TU_FLOW_API_KEY',
+  FLOW_SECRET_KEY: 'TU_FLOW_SECRET_KEY',
+  FLOW_URL_BASE:   'https://www.flow.cl/app/web/pay.php',  // producción
+  // FLOW_URL_BASE: 'https://sandbox.flow.cl/app/web/pay.php', // sandbox (pruebas)
+
+  /* ── APP ───────────────────────────────────*/
+  APP_NAME:    'CONARE HOGAR',
+  APP_URL:     'https://conare-hogar-app.vercel.app',   // cambia por tu URL de Vercel
+  MONEDA:      'CLP',
+  PAIS:        'CL',
+
+  /* ── PLANES ────────────────────────────────
+     Precios en pesos chilenos (CLP)
+     Puedes cambiarlos aquí en cualquier momento
+  ─────────────────────────────────────────── */
+  PLANES: {
+    basico: {
+      nombre:   'Básico',
+      precio:    9900,
+      retiros:   1,
+      badge:    'badge-gray',
+      materiales: ['PET', 'Aluminio'],
+    },
+    estandar: {
+      nombre:   'Estándar',
+      precio:    13900,
+      retiros:   2,
+      badge:    'badge-blue',
+      materiales: ['PET', 'Aluminio', 'Vidrio', 'Cartón'],
+    },
+    premium: {
+      nombre:   'Premium',
+      precio:    22900,
+      retiros:   4,
+      badge:    'badge-purple',
+      materiales: ['PET', 'Aluminio', 'Vidrio', 'Cartón'],
+      prioridad: true,
+    }
+  },
+
+  /* ── CAMIONES (simulados hasta conectar GPS real) ── */
+  CAMIONES: [
+    { id: 1, nombre: 'Camión #1', ruta: 'Ruta Sur',   color: '#1D9E75' },
+    { id: 2, nombre: 'Camión #2', ruta: 'Ruta Norte', color: '#185FA5' },
+    { id: 3, nombre: 'Camión #3', ruta: 'Ruta Este',  color: '#BA7517' },
+  ],
+
+  /* ── ADMIN ─────────────────────────────────
+     Email del administrador (acceso al panel)
+  ─────────────────────────────────────────── */
+  ADMIN_EMAIL: 'admin@conare-hogar.cl',
+
+};
+/* === supabase.js === */
+/* ============================================
+   CONARE HOGAR — Cliente Supabase
+   Maneja base de datos, autenticación y storage
+   ============================================ */
+
+/* Init Supabase */
+document.addEventListener('DOMContentLoaded', () => {
+  supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+  App.init();
+});
+
+/* ── Usuarios ────────────────────────────── */
+const DB = {
+
+  async getUsuario(userId) {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('*')
+      .eq('id', userId)
+      .single();
+    if (error) console.error('getUsuario:', error);
+    return data;
+  },
+
+  async crearUsuario(userId, datos) {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .insert([{ id: userId, ...datos }]);
+    if (error) console.error('crearUsuario:', error);
+    return data;
+  },
+
+  async actualizarUsuario(userId, datos) {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .update(datos)
+      .eq('id', userId);
+    if (error) console.error('actualizarUsuario:', error);
+    return data;
+  },
+
+  /* ── Retiros ─────────────────────────────── */
+  async getRetirosPendientes(userId) {
+    const { data, error } = await supabase
+      .from('retiros')
+      .select('*')
+      .eq('usuario_id', userId)
+      .eq('estado', 'pendiente')
+      .order('fecha_programada', { ascending: true })
+      .limit(1);
+    if (error) console.error('getRetirosPendientes:', error);
+    return data || [];
+  },
+
+  async getHistorialRetiros(userId) {
+    const { data, error } = await supabase
+      .from('retiros')
+      .select('*')
+      .eq('usuario_id', userId)
+      .order('fecha_programada', { ascending: false })
+      .limit(10);
+    if (error) console.error('getHistorialRetiros:', error);
+    return data || [];
+  },
+
+  async aprobarRetiro(retiroId) {
+    const { data, error } = await supabase
+      .from('retiros')
+      .update({ estado: 'aprobado', aprobado_at: new Date().toISOString() })
+      .eq('id', retiroId);
+    if (error) console.error('aprobarRetiro:', error);
+    return data;
+  },
+
+  async rechazarRetiro(retiroId) {
+    const { data, error } = await supabase
+      .from('retiros')
+      .update({ estado: 'rechazado' })
+      .eq('id', retiroId);
+    if (error) console.error('rechazarRetiro:', error);
+    return data;
+  },
+
+  async actualizarMateriales(retiroId, materiales, fotoUrls) {
+    const { data, error } = await supabase
+      .from('retiros')
+      .update({ materiales, foto_urls: fotoUrls, fotos_enviadas_at: new Date().toISOString() })
+      .eq('id', retiroId);
+    if (error) console.error('actualizarMateriales:', error);
+    return data;
+  },
+
+  /* ── Admin ───────────────────────────────── */
+  async getTodosLosClientes() {
+    const { data, error } = await supabase
+      .from('usuarios')
+      .select('*, retiros(count)')
+      .order('created_at', { ascending: false });
+    if (error) console.error('getTodosLosClientes:', error);
+    return data || [];
+  },
+
+  async getRutasSemana() {
+    const inicio = new Date();
+    inicio.setDate(inicio.getDate() - inicio.getDay() + 1);
+    const fin = new Date(inicio);
+    fin.setDate(fin.getDate() + 6);
+    const { data, error } = await supabase
+      .from('retiros')
+      .select('*, usuarios(nombre, apellido, direccion, ciudad)')
+      .gte('fecha_programada', inicio.toISOString())
+      .lte('fecha_programada', fin.toISOString())
+      .eq('estado', 'aprobado')
+      .order('fecha_programada');
+    if (error) console.error('getRutasSemana:', error);
+    return data || [];
+  },
+
+  async getSolicitudesConFotos() {
+    const { data, error } = await supabase
+      .from('retiros')
+      .select('*, usuarios(nombre, apellido)')
+      .eq('estado', 'aprobado')
+      .not('foto_urls', 'is', null)
+      .order('fotos_enviadas_at', { ascending: false });
+    if (error) console.error('getSolicitudesConFotos:', error);
+    return data || [];
+  },
+
+  /* ── Storage (fotos) ─────────────────────── */
+  async subirFoto(file, userId, retiroId) {
+    const ext = file.name.split('.').pop();
+    const path = `${userId}/${retiroId}/${Date.now()}.${ext}`;
+    const { data, error } = await supabase.storage
+      .from('fotos-retiros')
+      .upload(path, file, { contentType: file.type });
+    if (error) { console.error('subirFoto:', error); return null; }
+    const { data: urlData } = supabase.storage.from('fotos-retiros').getPublicUrl(path);
+    return urlData.publicUrl;
+  },
+
+};
+/* === app.js === */
+/* ============================================
+   CONARE HOGAR — Controlador principal
+   Navegación, estado global, inicialización
+   ============================================ */
+
+const App = {
+
+  /* Estado global */
+  state: {
+    usuario: null,
+    retiroPendiente: null,
+    planActual: null,
+    esAdmin: false,
+  },
+
+  /* Inicializa la app tras cargar Supabase */
+  async init() {
+    // Escucha cambios de sesión (login/logout)
+    supabase.auth.onAuthStateChange(async (event, session) => {
+      if (session?.user) {
+        await App.cargarUsuario(session.user.id);
+      } else {
+        App.state.usuario = null;
+        App.navigate('welcome');
+      }
+    });
+
+    // Verifica si ya hay sesión activa
+    const { data: { session } } = await supabase.auth.getSession();
+    if (session?.user) {
+      await App.cargarUsuario(session.user.id);
+    } else {
+      App.navigate('welcome');
+    }
+  },
+
+  /* Carga datos del usuario y navega al dashboard */
+  async cargarUsuario(userId) {
+    const usuario = await DB.getUsuario(userId);
+    if (!usuario) {
+      // Usuario autenticado pero sin perfil → va a completar registro
+      App.navigate('registro');
+      return;
+    }
+    App.state.usuario = usuario;
+    App.state.planActual = CONFIG.PLANES[usuario.plan] || CONFIG.PLANES.basico;
+    App.state.esAdmin = usuario.email === CONFIG.ADMIN_EMAIL;
+
+    App.renderTopbar();
+
+    if (App.state.esAdmin) {
+      App.navigate('admin');
+    } else {
+      App.navigate('home');
+      await Dashboard.cargar();
+    }
+  },
+
+  /* Navegación entre pantallas */
+  navigate(screen) {
+    // Oculta todas las pantallas
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+
+    // Muestra la pantalla destino
+    const target = document.getElementById(`scr-${screen}`);
+    if (target) target.classList.add('active');
+
+    // Bottom nav solo para usuarios logueados (excepto admin)
+    const nav = document.getElementById('bottom-nav');
+    const clientScreens = ['home', 'camiones', 'plan', 'perfil'];
+    if (App.state.usuario && clientScreens.includes(screen)) {
+      nav.style.display = 'flex';
+      // Marca el botón activo
+      document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+      const activeBtn = document.getElementById(`nav-${screen}`);
+      if (activeBtn) activeBtn.classList.add('active');
+    } else {
+      nav.style.display = 'none';
+    }
+
+    // Scroll al tope
+    window.scrollTo(0, 0);
+  },
+
+  /* Renderiza el topbar según el estado */
+  renderTopbar() {
+    const right = document.getElementById('topbar-right');
+    if (!App.state.usuario) { right.innerHTML = ''; return; }
+
+    const u = App.state.usuario;
+    const initials = `${u.nombre?.charAt(0) || ''}${u.apellido?.charAt(0) || ''}`.toUpperCase();
+
+    if (App.state.esAdmin) {
+      right.innerHTML = `
+        <button class="topbar-admin-btn" onclick="App.navigate('home')">
+          <i class="ti ti-arrow-left"></i> Ver como cliente
+        </button>
+        <div class="topbar-avatar">OP</div>`;
+    } else {
+      right.innerHTML = `
+        <button class="topbar-admin-btn" onclick="App.navigate('admin')" id="btn-admin" style="display:none">
+          <i class="ti ti-settings"></i> Admin
+        </button>
+        <div class="topbar-avatar">${initials}</div>`;
+    }
+  },
+
+  /* Formatea precio CLP */
+  formatPrecio(num) {
+    return '$' + num.toLocaleString('es-CL');
+  },
+
+  /* Formatea fecha en español */
+  formatFecha(isoString) {
+    if (!isoString) return '—';
+    const d = new Date(isoString);
+    return d.toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' });
+  },
+
+  /* Muestra un mensaje de alerta */
+  showAlert(elementId, mensaje, tipo = 'error') {
+    const el = document.getElementById(elementId);
+    if (!el) return;
+    el.className = `alert alert-${tipo}`;
+    el.textContent = mensaje;
+    el.style.display = 'flex';
+    setTimeout(() => { el.style.display = 'none'; }, 5000);
+  },
+
+  /* Muestra toast de notificación */
+  showToast(mensaje, sub = '') {
+    const toast = document.getElementById('toast-retiro');
+    if (!toast) return;
+    if (sub) document.getElementById('toast-retiro-txt').textContent = sub;
+    toast.style.display = 'flex';
+  },
+
+};
+
+/* ── Dashboard ───────────────────────────── */
+const Dashboard = {
+  async cargar() {
+    if (!App.state.usuario) return;
+    const u = App.state.usuario;
+    const plan = CONFIG.PLANES[u.plan] || CONFIG.PLANES.basico;
+
+    // Datos básicos
+    document.getElementById('dash-nombre').textContent = u.nombre || '—';
+    document.getElementById('dash-plan').textContent = plan.nombre;
+    document.getElementById('dash-retiros-rest').textContent = plan.retiros;
+    document.getElementById('dash-retiros-rest2').textContent = u.retiros_restantes ?? plan.retiros;
+    document.getElementById('dash-kg').textContent = u.total_kg || 0;
+
+    const badge = document.getElementById('dash-badge');
+    badge.textContent = plan.nombre;
+    badge.className = `badge ${plan.badge}`;
+
+    // Retiro pendiente
+    const retiros = await DB.getRetirosPendientes(u.id);
+    if (retiros.length > 0) {
+      const r = retiros[0];
+      App.state.retiroPendiente = r;
+      document.getElementById('ret-fecha').textContent = App.formatFecha(r.fecha_programada);
+      document.getElementById('ret-horario').textContent = `${r.hora_inicio || '08:00'} – ${r.hora_fin || '10:00'} hrs · ${r.camion || 'Camión asignado'}`;
+      document.getElementById('ret-materiales').textContent = r.materiales_autorizados?.join(', ') || plan.materiales.join(', ');
+      document.getElementById('card-retiro-pendiente').style.display = 'block';
+      App.showToast('Nuevo retiro programado', App.formatFecha(r.fecha_programada));
+    }
+
+    // Historial
+    await Dashboard.cargarHistorial();
+  },
+
+  async cargarHistorial() {
+    const retiros = await DB.getHistorialRetiros(App.state.usuario.id);
+    const lista = document.getElementById('historial-lista');
+    if (!retiros.length) {
+      lista.innerHTML = '<div class="empty-state">Aún no tienes retiros realizados.</div>';
+      return;
+    }
+    lista.innerHTML = retiros.map(r => `
+      <div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:0.5px solid var(--border)">
+        <div class="retiro-icon" style="width:36px;height:36px;font-size:16px">
+          <i class="ti ti-circle-check"></i>
+        </div>
+        <div style="flex:1">
+          <div style="font-weight:500;font-size:13px">${App.formatFecha(r.fecha_programada)}</div>
+          <div style="font-size:11px;color:#666">${(r.materiales || []).join(' · ')} ${r.kg_total ? `· ${r.kg_total} kg` : ''}</div>
+        </div>
+        <span class="badge ${r.estado === 'completado' ? 'badge-green' : 'badge-gray'}">
+          ${r.estado === 'completado' ? 'Completado' : r.estado}
+        </span>
+      </div>`).join('');
+  }
+};
+/* === auth.js === */
+/* ============================================
+   CONARE HOGAR — Autenticación
+   Login, logout, recuperación de contraseña
+   ============================================ */
+
+const Auth = {
+
+  async login() {
+    const email    = document.getElementById('login-email')?.value?.trim();
+    const password = document.getElementById('login-password')?.value;
+    const btn      = document.getElementById('login-btn');
+
+    if (!email || !password) {
+      App.showAlert('login-error', 'Por favor ingresa tu correo y contraseña.');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Entrando...';
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-login"></i> Entrar';
+      const msg = error.message.includes('Invalid') ? 'Correo o contraseña incorrectos.' : error.message;
+      App.showAlert('login-error', msg);
+      return;
+    }
+
+    // La navegación ocurre automáticamente via onAuthStateChange en App.init()
+  },
+
+  async logout() {
+    await supabase.auth.signOut();
+    App.state.usuario = null;
+    App.state.planActual = null;
+    App.navigate('welcome');
+    document.getElementById('topbar-right').innerHTML = '';
+  },
+
+  async recuperar() {
+    const email = prompt('Ingresa tu correo electrónico:');
+    if (!email) return;
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: `${CONFIG.APP_URL}/reset-password.html`,
+    });
+    if (error) alert('Error: ' + error.message);
+    else alert('Te enviamos un correo para restablecer tu contraseña.');
+  },
+
+};
+/* === registro.js === */
+/* ============================================
+   CONARE HOGAR — Flujo de registro (4 pasos)
+   ============================================ */
+
+const Registro = {
+
+  planSeleccionado: 'estandar',
+
+  /* Navega entre los 4 pasos del registro */
+  goStep(n) {
+    // Valida el paso actual antes de avanzar
+    if (n > 1 && !Registro._validarPaso(n - 1)) return;
+
+    // Muestra/oculta contenido de cada paso
+    for (let i = 1; i <= 4; i++) {
+      const el = document.getElementById(`reg-step-${i}`);
+      if (el) el.style.display = i === n ? 'block' : 'none';
+
+      // Actualiza indicador visual
+      const dot = document.getElementById(`step-dot-${i}`);
+      if (dot) {
+        dot.className = 'step-item' + (i < n ? ' done' : i === n ? ' active' : '');
+        const num = dot.querySelector('.step-num');
+        if (num) num.innerHTML = i < n ? '<i class="ti ti-check"></i>' : i;
+      }
+    }
+
+    // Si llega al paso 4, actualiza el resumen del plan
+    if (n === 4) Registro._actualizarResumen();
+
+    window.scrollTo(0, 0);
+  },
+
+  /* Selecciona un plan */
+  seleccionarPlan(key) {
+    Registro.planSeleccionado = key;
+    document.querySelectorAll('.plan-card').forEach(c => {
+      c.classList.remove('selected');
+      c.style.border = '0.5px solid var(--border)';
+    });
+    const el = document.getElementById(`plan-${key}`);
+    if (el) { el.classList.add('selected'); el.style.border = '2px solid var(--verde)'; }
+
+    // Actualiza botón
+    const btn = document.querySelector('#reg-step-2 .btn-primary');
+    if (btn) {
+      const plan = CONFIG.PLANES[key];
+      btn.innerHTML = `Continuar con ${plan.nombre} <i class="ti ti-arrow-right"></i>`;
+    }
+  },
+
+  /* Actualiza resumen en paso 4 */
+  _actualizarResumen() {
+    const plan = CONFIG.PLANES[Registro.planSeleccionado];
+    if (!plan) return;
+    document.getElementById('res-plan-nombre').textContent = plan.nombre;
+    document.getElementById('res-plan-precio').textContent = App.formatPrecio(plan.precio);
+    document.getElementById('res-plan-retiros').textContent = `${plan.retiros} por mes`;
+    const proxCobro = new Date();
+    proxCobro.setMonth(proxCobro.getMonth() + 1);
+    document.getElementById('res-proximo-cobro').textContent =
+      proxCobro.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' });
+  },
+
+  /* Validación por paso */
+  _validarPaso(paso) {
+    if (paso === 1) {
+      const nombre   = document.getElementById('reg-nombre')?.value?.trim();
+      const apellido = document.getElementById('reg-apellido')?.value?.trim();
+      const email    = document.getElementById('reg-email')?.value?.trim();
+      const telefono = document.getElementById('reg-telefono')?.value?.trim();
+      const password = document.getElementById('reg-password')?.value;
+
+      if (!nombre || !apellido) {
+        App.showAlert('reg-error-1', 'Ingresa tu nombre y apellido.');
+        return false;
+      }
+      if (!email || !email.includes('@')) {
+        App.showAlert('reg-error-1', 'Ingresa un correo electrónico válido.');
+        return false;
+      }
+      if (!telefono) {
+        App.showAlert('reg-error-1', 'Ingresa tu número de teléfono.');
+        return false;
+      }
+      if (!password || password.length < 8) {
+        App.showAlert('reg-error-1', 'La contraseña debe tener al menos 8 caracteres.');
+        return false;
+      }
+    }
+
+    if (paso === 3) {
+      const calle  = document.getElementById('reg-calle')?.value?.trim();
+      const ciudad = document.getElementById('reg-ciudad')?.value?.trim();
+      if (!calle || !ciudad) {
+        App.showAlert('reg-error-3', 'Ingresa tu calle/número y ciudad.');
+        return false;
+      }
+    }
+
+    return true;
+  },
+
+  /* Guarda los datos para usarlos en el pago */
+  getDatos() {
+    return {
+      nombre:     document.getElementById('reg-nombre')?.value?.trim(),
+      apellido:   document.getElementById('reg-apellido')?.value?.trim(),
+      email:      document.getElementById('reg-email')?.value?.trim(),
+      telefono:   document.getElementById('reg-telefono')?.value?.trim(),
+      password:   document.getElementById('reg-password')?.value,
+      direccion:  document.getElementById('reg-calle')?.value?.trim(),
+      depto:      document.getElementById('reg-depto')?.value?.trim(),
+      ciudad:     document.getElementById('reg-ciudad')?.value?.trim(),
+      region:     document.getElementById('reg-region')?.value,
+      referencia: document.getElementById('reg-referencia')?.value?.trim(),
+      plan:       Registro.planSeleccionado,
+    };
+  },
+};
+
+/* Ubicación en mapa */
+const Ubicacion = {
+  lat: null,
+  lng: null,
+
+  fijar() {
+    // Intenta obtener ubicación real del dispositivo
+    if ('geolocation' in navigator) {
+      navigator.geolocation.getCurrentPosition(
+        pos => {
+          Ubicacion.lat = pos.coords.latitude;
+          Ubicacion.lng = pos.coords.longitude;
+          Ubicacion._marcarFijada(`${pos.coords.latitude.toFixed(4)}, ${pos.coords.longitude.toFixed(4)}`);
+        },
+        () => Ubicacion._marcarFijada('Ubicación confirmada manualmente')
+      );
+    } else {
+      Ubicacion._marcarFijada('Ubicación confirmada manualmente');
+    }
+  },
+
+  _marcarFijada(texto) {
+    const el = document.getElementById('map-ubicacion');
+    const label = document.getElementById('map-label');
+    if (el) el.classList.add('pinned');
+    if (label) label.textContent = `✓ ${texto}`;
+  }
+};
+/* === pago.js === */
+/* ============================================
+   CONARE HOGAR — Integración de pagos con Flow
+   flow.cl — pasarela de pagos chilena
+   ============================================ */
+
+const Pago = {
+
+  async iniciar() {
+    const datos = Registro.getDatos();
+    const btn = document.getElementById('btn-pagar');
+    const plan = CONFIG.PLANES[datos.plan];
+
+    if (!plan) {
+      App.showAlert('reg-error-4', 'Error al obtener el plan seleccionado.');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Creando cuenta...';
+
+    try {
+      /* ── Paso 1: Crear usuario en Supabase Auth ── */
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: datos.email,
+        password: datos.password,
+      });
+
+      if (authError) throw new Error(authError.message);
+      const userId = authData.user.id;
+
+      /* ── Paso 2: Guardar perfil en tabla usuarios ── */
+      await DB.crearUsuario(userId, {
+        nombre:           datos.nombre,
+        apellido:         datos.apellido,
+        email:            datos.email,
+        telefono:         datos.telefono,
+        direccion:        datos.direccion,
+        depto:            datos.depto,
+        ciudad:           datos.ciudad,
+        region:           datos.region,
+        referencia:       datos.referencia,
+        lat:              Ubicacion.lat,
+        lng:              Ubicacion.lng,
+        plan:             datos.plan,
+        retiros_restantes: plan.retiros,
+        total_kg:         0,
+        suscripcion_activa: false, // se activa tras pago exitoso
+        created_at:       new Date().toISOString(),
+      });
+
+      /* ── Paso 3: Redirigir a Flow para el pago ── */
+      btn.innerHTML = '<div class="spinner"></div> Redirigiendo a Flow...';
+
+      // En producción real, esto se hace desde un backend (Vercel Function)
+      // para no exponer tu Flow Secret Key en el frontend.
+      // El backend recibe la orden y devuelve la URL de pago de Flow.
+      const respuesta = await fetch('/api/crear-pago', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          userId,
+          plan: datos.plan,
+          email: datos.email,
+          nombre: `${datos.nombre} ${datos.apellido}`,
+          monto: plan.precio,
+        }),
+      });
+
+      const resultado = await respuesta.json();
+
+      if (resultado.url) {
+        // Redirige al portal de pago de Flow
+        window.location.href = resultado.url;
+      } else {
+        throw new Error(resultado.error || 'Error al crear orden de pago');
+      }
+
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-shield-check"></i> Pagar con Flow y activar cuenta';
+      App.showAlert('reg-error-4', `Error: ${err.message}`);
+    }
+  },
+
+  /* Se llama cuando Flow redirige de vuelta tras pago exitoso */
+  async confirmarPago() {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get('token');
+    if (!token) return;
+
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    // Confirma el pago con el backend
+    const res = await fetch('/api/confirmar-pago', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ token, userId: session.user.id }),
+    });
+    const resultado = await res.json();
+
+    if (resultado.ok) {
+      await DB.actualizarUsuario(session.user.id, { suscripcion_activa: true });
+      App.navigate('home');
+      await Dashboard.cargar();
+    }
+  },
+
+};
+/* === retiro.js === */
+/* ============================================
+   CONARE HOGAR — Módulos funcionales
+   Retiro, Fotos, Camiones, Admin, MiPlan, Perfil
+   ============================================ */
+
+/* ── RETIRO ─────────────────────────────── */
+const Retiro = {
+
+  async aprobar() {
+    const r = App.state.retiroPendiente;
+    if (!r) return;
+    await DB.aprobarRetiro(r.id);
+    document.getElementById('card-retiro-pendiente').style.display = 'none';
+    document.getElementById('toast-retiro').style.display = 'none';
+
+    // Muestra card para subir fotos
+    const cardFotos = document.getElementById('card-fotos');
+    cardFotos.style.display = 'block';
+    document.getElementById('fotos-fecha-sub').textContent =
+      `${App.formatFecha(r.fecha_programada)} · ${r.hora_inicio || '08:00'} – ${r.hora_fin || '10:00'} hrs`;
+  },
+
+  async rechazar() {
+    const r = App.state.retiroPendiente;
+    if (!r) return;
+    await DB.rechazarRetiro(r.id);
+    const card = document.getElementById('card-retiro-pendiente');
+    card.innerHTML = `
+      <div style="text-align:center;padding:20px;color:#666;font-size:13px">
+        <i class="ti ti-calendar-x" style="font-size:36px;color:#BA7517;display:block;margin:0 auto 10px"></i>
+        <strong>Entendido</strong><br>
+        Hemos notificado al equipo. Te asignaremos un nuevo horario pronto.
+      </div>`;
+  },
+
+};
+
+/* ── FOTOS ──────────────────────────────── */
+const Fotos = {
+  materiales: [],
+  fotoFiles: [],
+
+  toggleMaterial(btn) {
+    const mat = btn.dataset.material;
+    btn.classList.toggle('active');
+    if (Fotos.materiales.includes(mat)) {
+      Fotos.materiales = Fotos.materiales.filter(m => m !== mat);
+    } else {
+      Fotos.materiales.push(mat);
+    }
+  },
+
+  agregar(input) {
+    const grid = document.getElementById('photo-grid');
+    Array.from(input.files).forEach(file => {
+      Fotos.fotoFiles.push(file);
+      const reader = new FileReader();
+      reader.onload = e => {
+        const idx = Fotos.fotoFiles.length - 1;
+        const div = document.createElement('div');
+        div.className = 'photo-thumb';
+        div.innerHTML = `
+          <img src="${e.target.result}" alt="Material reciclable">
+          <button class="photo-del" onclick="Fotos.eliminar(${idx}, this.parentNode)" aria-label="Eliminar foto">
+            <i class="ti ti-x"></i>
+          </button>`;
+        grid.appendChild(div);
+      };
+      reader.readAsDataURL(file);
+    });
+  },
+
+  eliminar(idx, el) {
+    Fotos.fotoFiles[idx] = null;
+    el.remove();
+  },
+
+  async enviar() {
+    const r = App.state.retiroPendiente;
+    if (!r) return;
+    if (!Fotos.materiales.length) {
+      alert('Selecciona al menos un material.');
+      return;
+    }
+
+    const btn = document.querySelector('#card-fotos .btn-primary');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Subiendo fotos...';
+
+    // Sube fotos a Supabase Storage
+    const urls = [];
+    for (const file of Fotos.fotoFiles.filter(Boolean)) {
+      const url = await DB.subirFoto(file, App.state.usuario.id, r.id);
+      if (url) urls.push(url);
+    }
+
+    await DB.actualizarMateriales(r.id, Fotos.materiales, urls);
+
+    document.getElementById('card-fotos').innerHTML = `
+      <div style="text-align:center;padding:24px">
+        <i class="ti ti-circle-check" style="font-size:44px;color:#1D9E75;display:block;margin:0 auto 12px"></i>
+        <div style="font-weight:500;font-size:17px;margin-bottom:6px">¡Todo listo!</div>
+        <div style="font-size:13px;color:#666;line-height:1.6">
+          El camión llegará el <strong>${App.formatFecha(r.fecha_programada)}</strong><br>
+          entre ${r.hora_inicio || '08:00'} y ${r.hora_fin || '10:00'} hrs.<br>
+          Recibirás una notificación 30 minutos antes.
+        </div>
+      </div>`;
+  },
+
+};
+
+/* ── CAMIONES EN TIEMPO REAL ─────────────── */
+const Camiones = {
+  timer: null,
+
+  info: {
+    1: 'Camión #1 — Ruta Sur · 3 paradas restantes · PET y aluminio',
+    2: 'Camión #2 — Ruta Norte · A ~800 m de tu ubicación · ETA: 12 min',
+    3: 'Camión #3 — En base · Sale a las 14:30 hrs',
+  },
+
+  seleccionar(n) {
+    const box = document.getElementById('truck-info-box');
+    if (box) box.innerHTML = `<i class="ti ti-truck" style="color:#1D9E75"></i> ${Camiones.info[n] || '—'}`;
+  },
+
+  iniciarAnimacion() {
+    let t = 0;
+    Camiones.timer = setInterval(() => {
+      t += 0.025;
+      const p1 = document.getElementById('truck-pin-1');
+      const p2 = document.getElementById('truck-pin-2');
+      if (p1) p1.style.left = (18 + Math.sin(t) * 8) + '%';
+      if (p2) p2.style.left = (52 + Math.cos(t * 0.8) * 6) + '%';
+    }, 120);
+  },
+
+  detenerAnimacion() {
+    if (Camiones.timer) clearInterval(Camiones.timer);
+  },
+};
+
+/* ── MI PLAN ─────────────────────────────── */
+const MiPlan = {
+
+  async cargar() {
+    const u = App.state.usuario;
+    if (!u) return;
+    const plan = CONFIG.PLANES[u.plan] || CONFIG.PLANES.basico;
+
+    document.getElementById('mi-plan-nombre').textContent = plan.nombre;
+    document.getElementById('mi-plan-precio').textContent = App.formatPrecio(plan.precio);
+    document.getElementById('mi-plan-retiros').textContent = `${plan.retiros} por mes`;
+
+    const desde = u.suscripcion_desde
+      ? new Date(u.suscripcion_desde).toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' })
+      : '—';
+    document.getElementById('mi-plan-desde').textContent = desde;
+
+    const proxCobro = new Date(u.proximo_cobro || Date.now() + 30 * 86400000);
+    document.getElementById('mi-plan-cobro').textContent =
+      proxCobro.toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' });
+
+    // Marca plan activo
+    document.querySelectorAll('[id^="cp-"]').forEach(c => {
+      c.style.border = '0.5px solid var(--border)';
+      c.classList.remove('sel');
+    });
+    const activo = document.getElementById(`cp-${u.plan}`);
+    if (activo) { activo.style.border = '2px solid var(--verde)'; activo.classList.add('sel'); }
+  },
+
+  async cambiar(key, el) {
+    document.querySelectorAll('[id^="cp-"]').forEach(c => {
+      c.style.border = '0.5px solid var(--border)';
+      c.classList.remove('sel');
+    });
+    el.style.border = '2px solid var(--verde)';
+    el.classList.add('sel');
+
+    const plan = CONFIG.PLANES[key];
+    if (!plan) return;
+
+    if (confirm(`¿Cambiar al plan ${plan.nombre} (${App.formatPrecio(plan.precio)}/mes)?`)) {
+      await DB.actualizarUsuario(App.state.usuario.id, {
+        plan: key,
+        retiros_restantes: plan.retiros,
+      });
+      App.state.usuario.plan = key;
+      document.getElementById('mi-plan-nombre').textContent = plan.nombre;
+      document.getElementById('mi-plan-precio').textContent = App.formatPrecio(plan.precio);
+      document.getElementById('mi-plan-retiros').textContent = `${plan.retiros} por mes`;
+      alert(`Plan actualizado a ${plan.nombre}. El nuevo monto se cobrará en tu próximo ciclo.`);
+    }
+  },
+
+  async cancelar() {
+    if (confirm('¿Seguro que deseas cancelar tu suscripción? Seguirá activa hasta fin del período pagado.')) {
+      await DB.actualizarUsuario(App.state.usuario.id, { cancelacion_solicitada: true });
+      alert('Suscripción marcada para cancelación. Recibirás un correo de confirmación.');
+    }
+  },
+};
+
+/* ── PERFIL ──────────────────────────────── */
+const Perfil = {
+
+  cargar() {
+    const u = App.state.usuario;
+    if (!u) return;
+    const initials = `${u.nombre?.charAt(0) || ''}${u.apellido?.charAt(0) || ''}`.toUpperCase();
+    document.getElementById('perfil-avatar').textContent = initials;
+    document.getElementById('perfil-nombre').textContent = `${u.nombre} ${u.apellido}`;
+    document.getElementById('perfil-email').textContent = u.email;
+    const dir = [u.direccion, u.depto, u.ciudad].filter(Boolean).join(', ');
+    document.getElementById('perfil-direccion').value = dir;
+    document.getElementById('perfil-telefono').value = u.telefono || '';
+  },
+
+  async guardar() {
+    const direccion = document.getElementById('perfil-direccion').value.trim();
+    const telefono  = document.getElementById('perfil-telefono').value.trim();
+    await DB.actualizarUsuario(App.state.usuario.id, { direccion, telefono });
+    alert('Cambios guardados correctamente.');
+  },
+};
+
+/* ── ADMIN ───────────────────────────────── */
+const Admin = {
+
+  async cargar() {
+    const clientes = await DB.getTodosLosClientes();
+    document.getElementById('adm-clientes').textContent = clientes.length;
+
+    const totalIngresos = clientes.reduce((sum, c) => {
+      const plan = CONFIG.PLANES[c.plan];
+      return sum + (plan ? plan.precio : 0);
+    }, 0);
+    document.getElementById('adm-ingresos').textContent = App.formatPrecio(totalIngresos);
+
+    Admin._renderClientes(clientes);
+    await Admin._renderRutas();
+    Admin._renderIngresos(clientes);
+    await Admin._renderSolicitudes();
+  },
+
+  _renderClientes(clientes) {
+    const lista = document.getElementById('admin-lista-clientes');
+    if (!clientes.length) {
+      lista.innerHTML = '<div class="empty-state">No hay clientes registrados aún.</div>';
+      return;
+    }
+    lista.innerHTML = clientes.map(c => {
+      const plan = CONFIG.PLANES[c.plan] || CONFIG.PLANES.basico;
+      const initials = `${c.nombre?.charAt(0) || '?'}${c.apellido?.charAt(0) || ''}`.toUpperCase();
+      return `
+        <div class="client-row">
+          <div class="client-avatar">${initials}</div>
+          <div class="client-info">
+            <div class="client-name">${c.nombre} ${c.apellido}</div>
+            <div class="client-sub">${c.ciudad || '—'} · ${c.direccion || '—'}</div>
+          </div>
+          <span class="badge ${plan.badge}">${plan.nombre}</span>
+        </div>`;
+    }).join('');
+  },
+
+  async _renderRutas() {
+    const retiros = await DB.getRutasSemana();
+    const content = document.getElementById('admin-rutas-content');
+
+    if (!retiros.length) {
+      content.innerHTML = '<div class="empty-state">No hay retiros aprobados esta semana.</div>';
+      return;
+    }
+
+    // Agrupa por día
+    const porDia = {};
+    retiros.forEach(r => {
+      const fecha = new Date(r.fecha_programada).toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' });
+      if (!porDia[fecha]) porDia[fecha] = [];
+      porDia[fecha].push(r);
+    });
+
+    content.innerHTML = Object.entries(porDia).map(([dia, rets]) => `
+      <div class="route-block">
+        <div class="route-day">${dia}</div>
+        ${rets.map(r => `
+          <div class="route-stop">
+            <div class="route-dot" style="background:#1D9E75"></div>
+            ${r.hora_inicio || '09:00'} · ${r.usuarios?.nombre} ${r.usuarios?.apellido} — ${r.usuarios?.direccion}
+          </div>`).join('')}
+      </div>`).join('');
+  },
+
+  _renderIngresos(clientes) {
+    const content = document.getElementById('admin-ingresos-content');
+    const porPlan = { basico: 0, estandar: 0, premium: 0 };
+    clientes.forEach(c => { if (porPlan[c.plan] !== undefined) porPlan[c.plan]++; });
+
+    content.innerHTML = `
+      <div class="card-title"><i class="ti ti-chart-bar"></i> Ingresos por plan</div>
+      ${Object.entries(CONFIG.PLANES).map(([key, plan]) => `
+        <div class="revenue-row">
+          <span>${plan.nombre} (${porPlan[key]} clientes)</span>
+          <strong>${App.formatPrecio(plan.precio * porPlan[key])}</strong>
+        </div>`).join('')}
+      <div style="display:flex;justify-content:space-between;font-weight:500;font-size:14px;padding-top:10px;border-top:1px solid var(--border)">
+        <span>Total</span>
+        <span style="color:var(--verde)">
+          ${App.formatPrecio(Object.entries(CONFIG.PLANES).reduce((s, [k, p]) => s + p.precio * porPlan[k], 0))} / mes
+        </span>
+      </div>`;
+  },
+
+  async _renderSolicitudes() {
+    const solicitudes = await DB.getSolicitudesConFotos();
+    const content = document.getElementById('admin-solicitudes-content');
+
+    if (!solicitudes.length) {
+      content.innerHTML = '<div class="empty-state">No hay solicitudes con fotos pendientes.</div>';
+      return;
+    }
+
+    content.innerHTML = solicitudes.map(s => `
+      <div style="padding:10px 0;border-bottom:0.5px solid var(--border)">
+        <div style="display:flex;align-items:center;gap:10px;margin-bottom:8px">
+          <div class="retiro-icon" style="width:36px;height:36px;font-size:16px"><i class="ti ti-camera"></i></div>
+          <div style="flex:1">
+            <div style="font-weight:500;font-size:13px">${s.usuarios?.nombre} ${s.usuarios?.apellido}</div>
+            <div style="font-size:11px;color:#666">${App.formatFecha(s.fecha_programada)} · ${(s.materiales||[]).join(', ')}</div>
+          </div>
+          <span class="badge ${s.camion_asignado ? 'badge-green' : 'badge-amber'}">
+            ${s.camion_asignado ? 'Asignado' : 'Pendiente'}
+          </span>
+        </div>
+        ${!s.camion_asignado ? `
+          <button class="btn btn-primary btn-full" style="font-size:13px" onclick="Admin.asignarCamion('${s.id}')">
+            <i class="ti ti-truck"></i> Asignar camión
+          </button>` : ''}
+      </div>`).join('');
+  },
+
+  tab(name, btn) {
+    document.querySelectorAll('.admin-panel').forEach(p => p.classList.remove('active'));
+    document.querySelectorAll('.admin-tab').forEach(b => b.classList.remove('active'));
+    document.getElementById(`admin-panel-${name}`).classList.add('active');
+    btn.classList.add('active');
+  },
+
+  buscar(query) {
+    const q = query.toLowerCase();
+    document.querySelectorAll('.client-row').forEach(row => {
+      const text = row.textContent.toLowerCase();
+      row.style.display = text.includes(q) ? 'flex' : 'none';
+    });
+  },
+
+  async asignarCamion(retiroId) {
+    const camion = prompt('¿Qué camión asignar?\n1 = Ruta Sur\n2 = Ruta Norte\n3 = Ruta Este\nIngresa el número:');
+    if (!camion) return;
+    const cam = CONFIG.CAMIONES.find(c => c.id === parseInt(camion));
+    if (!cam) { alert('Número de camión inválido.'); return; }
+    const { error } = await supabase.from('retiros').update({ camion_asignado: cam.nombre }).eq('id', retiroId);
+    if (!error) { alert(`${cam.nombre} asignado correctamente.`); await Admin._renderSolicitudes(); }
+  },
+
+  exportar() {
+    const rows = document.querySelectorAll('.client-row');
+    const csv = ['Nombre,Plan,Ciudad,Dirección'];
+    rows.forEach(row => {
+      const name = row.querySelector('.client-name')?.textContent || '';
+      const plan = row.querySelector('.badge')?.textContent || '';
+      const sub  = row.querySelector('.client-sub')?.textContent?.split(' · ') || ['', ''];
+      csv.push(`"${name}","${plan}","${sub[0]}","${sub[1]}"`);
+    });
+    const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = 'clientes-conare-hogar.csv'; a.click();
+  },
+
+  async notificarTodos() {
+    if (!confirm('¿Notificar a todos los clientes sobre sus retiros programados?')) return;
+    alert('Notificaciones enviadas correctamente. (En producción: usa Supabase Edge Functions + push notifications)');
+  },
+};
+/* === sw-register.js === */
+/* Registra el Service Worker para PWA */
+if ('serviceWorker' in navigator) {
+  document.addEventListener("DOMContentLoaded", () => {
+    navigator.serviceWorker.register('/sw.js')
+      .then(reg => console.log('SW registrado:', reg.scope))
+      .catch(err => console.log('SW error:', err));
+  });
+}
+</script>
 </body>
 </html>
