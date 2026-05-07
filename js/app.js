@@ -15,15 +15,22 @@ const App = {
 
   /* Inicializa la app tras cargar Supabase */
   async init() {
-    // Escucha cambios de sesión (login/logout)
-    supabase.auth.onAuthStateChange(async (event, session) => {
-      if (session?.user) {
-        await App.cargarUsuario(session.user.id);
-      } else {
-        App.state.usuario = null;
-        App.navigate('welcome');
+    // Muestra pantalla de bienvenida inmediatamente
+    App.navigate('welcome');
+    
+    // Intenta conectar Supabase si está disponible
+    try {
+      if (window.supabase && CONFIG.SUPABASE_URL !== 'https://TU_PROYECTO.supabase.co') {
+        supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          await App.cargarUsuario(session.user.id);
+        }
       }
-    });
+    } catch(e) {
+      console.log('Supabase no disponible:', e);
+    }
+  },
 
     // Verifica si ya hay sesión activa
     const { data: { session } } = await supabase.auth.getSession();
@@ -193,3 +200,4 @@ const Dashboard = {
       </div>`).join('');
   }
 };
+document.addEventListener('DOMContentLoaded', () => App.init());
