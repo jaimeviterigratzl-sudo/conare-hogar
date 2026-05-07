@@ -483,6 +483,11 @@ main { flex: 1; overflow-y: auto; }
             <button class="btn btn-primary btn-full" id="btn-pagar" onclick="Pago.iniciar()">
               <i class="ti ti-shield-check"></i> Pagar con Flow y activar cuenta
             </button>
+            <div id="admin-bypass" style="display:none;margin-top:8px">
+              <button class="btn btn-full" onclick="Pago.activarAdmin()" style="background:#E1F5EE;color:#085041;border-color:#5DCAA5">
+                <i class="ti ti-settings"></i> Activar como administrador (sin pago)
+              </button>
+            </div>
             <p class="legal-small">Al confirmar autorizas el cobro mensual automático. Cancela cuando quieras desde la app.</p>
           </div>
           <div class="step-actions">
@@ -1237,7 +1242,12 @@ const Registro = {
     }
 
     // Si llega al paso 4, actualiza el resumen del plan
-    if (n === 4) Registro._actualizarResumen();
+    if (n === 4) {
+      Registro._actualizarResumen();
+      const email = document.getElementById('reg-email')?.value?.trim();
+      const bypass = document.getElementById('admin-bypass');
+      if (bypass && email === CONFIG.ADMIN_EMAIL) bypass.style.display = 'block';
+    }
 
     window.scrollTo(0, 0);
   },
@@ -1444,6 +1454,41 @@ const Pago = {
   },
 
   /* Se llama cuando Flow redirige de vuelta tras pago exitoso */
+  async activarAdmin() {
+    const datos = Registro.getDatos();
+    const btn = document.getElementById('btn-pagar');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Creando cuenta admin...';
+    try {
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: datos.email,
+        password: datos.password,
+      });
+      if (authError) throw new Error(authError.message);
+      const userId = authData.user.id;
+      const plan = CONFIG.PLANES[datos.plan] || CONFIG.PLANES.basico;
+      await DB.crearUsuario(userId, {
+        nombre: datos.nombre,
+        apellido: datos.apellido,
+        email: datos.email,
+        telefono: datos.telefono,
+        direccion: datos.direccion,
+        ciudad: datos.ciudad,
+        region: datos.region,
+        plan: datos.plan,
+        retiros_restantes: plan.retiros,
+        total_kg: 0,
+        suscripcion_activa: true,
+        created_at: new Date().toISOString(),
+      });
+      await App.cargarUsuario(userId);
+    } catch(err) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-shield-check"></i> Pagar con Flow y activar cuenta';
+      App.showAlert('reg-error-4', 'Error: ' + err.message);
+    }
+  },
+
   async confirmarPago() {
     const params = new URLSearchParams(window.location.search);
     const token = params.get('token');
