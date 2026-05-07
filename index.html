@@ -1,0 +1,495 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <meta name="theme-color" content="#1D9E75">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="CONARE HOGAR">
+  <meta name="description" content="Servicio de reciclaje domiciliario a domicilio en Chile">
+  <title>CONARE HOGAR</title>
+  <link rel="manifest" href="/manifest.json">
+  <link rel="apple-touch-icon" href="/icons/icon-192.png">
+  <link rel="icon" type="image/png" href="/icons/icon-192.png">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.31.0/dist/tabler-icons.min.css">
+  <link rel="stylesheet" href="/css/app.css">
+</head>
+<body>
+
+  <!-- APP SHELL -->
+  <div id="app">
+
+    <!-- TOP BAR -->
+    <header class="topbar" id="topbar">
+      <div class="logo">
+        <div class="logo-icon"><i class="ti ti-recycle"></i></div>
+        <span id="app-name">CONARE HOGAR</span>
+      </div>
+      <div class="topbar-right" id="topbar-right">
+        <!-- Se llena dinámicamente según el estado del usuario -->
+      </div>
+    </header>
+
+    <!-- PANTALLAS -->
+    <main id="main-content">
+
+      <!-- ① BIENVENIDA / LOGIN -->
+      <section class="screen" id="scr-welcome" data-screen="welcome">
+        <div class="welcome-hero">
+          <div class="hero-icon"><i class="ti ti-recycle"></i></div>
+          <h1>CONARE HOGAR</h1>
+          <p>Reciclaje domiciliario a tu puerta.<br>Simple, programado y confiable.</p>
+        </div>
+        <div class="welcome-actions">
+          <button class="btn btn-primary btn-full" onclick="App.navigate('registro')">
+            <i class="ti ti-user-plus"></i> Crear cuenta gratis
+          </button>
+          <button class="btn btn-full" onclick="App.navigate('login')" style="margin-top:10px">
+            <i class="ti ti-login"></i> Ya tengo cuenta
+          </button>
+        </div>
+        <p class="welcome-legal">Al registrarte aceptas nuestros <a href="#">Términos de servicio</a> y <a href="#">Política de privacidad</a>.</p>
+      </section>
+
+      <!-- ② LOGIN -->
+      <section class="screen" id="scr-login" data-screen="login">
+        <div class="screen-header">
+          <button class="btn-back" onclick="App.navigate('welcome')"><i class="ti ti-arrow-left"></i></button>
+          <h2>Iniciar sesión</h2>
+        </div>
+        <div class="form-card">
+          <div class="form-group">
+            <label>Correo electrónico</label>
+            <input type="email" id="login-email" placeholder="tu@correo.com" autocomplete="email">
+          </div>
+          <div class="form-group">
+            <label>Contraseña</label>
+            <input type="password" id="login-password" placeholder="••••••••" autocomplete="current-password">
+          </div>
+          <div id="login-error" class="alert alert-error" style="display:none"></div>
+          <button class="btn btn-primary btn-full" id="login-btn" onclick="Auth.login()">
+            <i class="ti ti-login"></i> Entrar
+          </button>
+          <button class="btn-link" onclick="App.navigate('recuperar')">¿Olvidaste tu contraseña?</button>
+        </div>
+      </section>
+
+      <!-- ③ REGISTRO (4 pasos) -->
+      <section class="screen" id="scr-registro" data-screen="registro">
+        <div class="screen-header">
+          <button class="btn-back" onclick="App.navigate('welcome')"><i class="ti ti-arrow-left"></i></button>
+          <h2>Crear cuenta</h2>
+        </div>
+
+        <!-- Barra de pasos -->
+        <div class="step-bar">
+          <div class="step-item active" id="step-dot-1"><span class="step-num">1</span><span class="step-label">Datos</span></div>
+          <div class="step-line"></div>
+          <div class="step-item" id="step-dot-2"><span class="step-num">2</span><span class="step-label">Plan</span></div>
+          <div class="step-line"></div>
+          <div class="step-item" id="step-dot-3"><span class="step-num">3</span><span class="step-label">Ubicación</span></div>
+          <div class="step-line"></div>
+          <div class="step-item" id="step-dot-4"><span class="step-num">4</span><span class="step-label">Pago</span></div>
+        </div>
+
+        <!-- Paso 1: Datos personales -->
+        <div class="reg-step" id="reg-step-1">
+          <div class="form-card">
+            <div class="row-2">
+              <div class="form-group"><label>Nombre *</label><input type="text" id="reg-nombre" placeholder="María" autocomplete="given-name"></div>
+              <div class="form-group"><label>Apellido *</label><input type="text" id="reg-apellido" placeholder="González" autocomplete="family-name"></div>
+            </div>
+            <div class="form-group"><label>Correo electrónico *</label><input type="email" id="reg-email" placeholder="maria@correo.com" autocomplete="email"></div>
+            <div class="form-group"><label>Teléfono *</label><input type="tel" id="reg-telefono" placeholder="+56 9 1234 5678" autocomplete="tel"></div>
+            <div class="form-group"><label>Contraseña *</label><input type="password" id="reg-password" placeholder="Mínimo 8 caracteres" autocomplete="new-password"></div>
+            <div id="reg-error-1" class="alert alert-error" style="display:none"></div>
+            <button class="btn btn-primary btn-full" onclick="Registro.goStep(2)">Continuar <i class="ti ti-arrow-right"></i></button>
+          </div>
+        </div>
+
+        <!-- Paso 2: Plan -->
+        <div class="reg-step" id="reg-step-2" style="display:none">
+          <h3 class="step-title">Elige tu plan</h3>
+
+          <div class="plan-card" id="plan-basico" onclick="Registro.seleccionarPlan('basico')">
+            <div class="plan-header">
+              <div><div class="plan-nombre">Básico</div><div class="plan-precio">$9.900 <span>/ mes</span></div></div>
+              <span class="badge badge-gray">1 retiro/mes</span>
+            </div>
+            <div class="plan-features">
+              <div class="plan-feat"><i class="ti ti-check"></i> 1 retiro mensual programado</div>
+              <div class="plan-feat"><i class="ti ti-check"></i> PET y latas de aluminio</div>
+              <div class="plan-feat"><i class="ti ti-check"></i> Notificaciones push</div>
+              <div class="plan-feat"><i class="ti ti-check"></i> Seguimiento en mapa</div>
+            </div>
+          </div>
+
+          <div class="plan-card selected" id="plan-estandar" onclick="Registro.seleccionarPlan('estandar')">
+            <div class="plan-popular">Más popular</div>
+            <div class="plan-header">
+              <div><div class="plan-nombre">Estándar</div><div class="plan-precio">$13.900 <span>/ mes</span></div></div>
+              <span class="badge badge-blue">2 retiros/mes</span>
+            </div>
+            <div class="plan-features">
+              <div class="plan-feat"><i class="ti ti-check"></i> 2 retiros mensuales</div>
+              <div class="plan-feat"><i class="ti ti-check"></i> Todos los materiales</div>
+              <div class="plan-feat"><i class="ti ti-check"></i> Subida de fotos</div>
+              <div class="plan-feat"><i class="ti ti-check"></i> Horario flexible</div>
+            </div>
+          </div>
+
+          <div class="plan-card" id="plan-premium" onclick="Registro.seleccionarPlan('premium')">
+            <div class="plan-header">
+              <div><div class="plan-nombre">Premium</div><div class="plan-precio">$22.900 <span>/ mes</span></div></div>
+              <span class="badge badge-purple">4 retiros/mes</span>
+            </div>
+            <div class="plan-features">
+              <div class="plan-feat"><i class="ti ti-check"></i> 4 retiros mensuales</div>
+              <div class="plan-feat"><i class="ti ti-check"></i> Retiro a pedido</div>
+              <div class="plan-feat"><i class="ti ti-check"></i> Todos los materiales</div>
+              <div class="plan-feat"><i class="ti ti-check"></i> Prioridad en ruta</div>
+            </div>
+          </div>
+
+          <div class="step-actions">
+            <button class="btn" onclick="Registro.goStep(1)"><i class="ti ti-arrow-left"></i></button>
+            <button class="btn btn-primary flex-1" onclick="Registro.goStep(3)">Continuar <i class="ti ti-arrow-right"></i></button>
+          </div>
+        </div>
+
+        <!-- Paso 3: Ubicación -->
+        <div class="reg-step" id="reg-step-3" style="display:none">
+          <div class="form-card">
+            <h3 class="step-title">Dirección de retiro</h3>
+            <div class="form-group"><label>Calle y número *</label><input type="text" id="reg-calle" placeholder="Av. Arturo Prat 456" autocomplete="street-address"></div>
+            <div class="row-2">
+              <div class="form-group"><label>Depto / Casa</label><input type="text" id="reg-depto" placeholder="Depto 3B"></div>
+              <div class="form-group"><label>Ciudad *</label><input type="text" id="reg-ciudad" placeholder="Valdivia" autocomplete="address-level2"></div>
+            </div>
+            <div class="form-group"><label>Región</label>
+              <select id="reg-region">
+                <option>Los Ríos</option>
+                <option>Los Lagos</option>
+                <option>Araucanía</option>
+                <option>Bío-Bío</option>
+                <option>Metropolitana</option>
+                <option>Valparaíso</option>
+                <option>O'Higgins</option>
+                <option>Maule</option>
+                <option>Ñuble</option>
+                <option>Aysén</option>
+                <option>Magallanes</option>
+                <option>Atacama</option>
+                <option>Coquimbo</option>
+                <option>Tarapacá</option>
+                <option>Antofagasta</option>
+                <option>Arica y Parinacota</option>
+              </select>
+            </div>
+            <div class="form-group"><label>Referencia</label><input type="text" id="reg-referencia" placeholder="Portón verde, árbol en frente"></div>
+            <div class="map-placeholder" id="map-ubicacion" onclick="Ubicacion.fijar()">
+              <i class="ti ti-map-pin"></i>
+              <span id="map-label">Toca para confirmar tu ubicación en el mapa</span>
+            </div>
+            <div id="reg-error-3" class="alert alert-error" style="display:none"></div>
+          </div>
+          <div class="step-actions">
+            <button class="btn" onclick="Registro.goStep(2)"><i class="ti ti-arrow-left"></i></button>
+            <button class="btn btn-primary flex-1" onclick="Registro.goStep(4)">Confirmar dirección <i class="ti ti-arrow-right"></i></button>
+          </div>
+        </div>
+
+        <!-- Paso 4: Pago -->
+        <div class="reg-step" id="reg-step-4" style="display:none">
+          <div class="form-card">
+            <h3 class="step-title">Método de pago</h3>
+            <div class="info-box">
+              <i class="ti ti-lock"></i>
+              Pago seguro con Flow · Acepta todas las tarjetas chilenas y transferencias
+            </div>
+
+            <div class="resumen-plan" id="resumen-plan">
+              <div class="resumen-row"><span>Plan seleccionado</span><strong id="res-plan-nombre">Estándar</strong></div>
+              <div class="resumen-row"><span>Monto mensual</span><strong id="res-plan-precio">$13.900</strong></div>
+              <div class="resumen-row"><span>Retiros incluidos</span><strong id="res-plan-retiros">2 por mes</strong></div>
+              <div class="resumen-row muted"><span>Próximo cobro</span><span id="res-proximo-cobro">—</span></div>
+            </div>
+
+            <div id="reg-error-4" class="alert alert-error" style="display:none"></div>
+            <button class="btn btn-primary btn-full" id="btn-pagar" onclick="Pago.iniciar()">
+              <i class="ti ti-shield-check"></i> Pagar con Flow y activar cuenta
+            </button>
+            <p class="legal-small">Al confirmar autorizas el cobro mensual automático. Cancela cuando quieras desde la app.</p>
+          </div>
+          <div class="step-actions">
+            <button class="btn" onclick="Registro.goStep(3)"><i class="ti ti-arrow-left"></i></button>
+          </div>
+        </div>
+      </section>
+
+      <!-- ④ DASHBOARD CLIENTE -->
+      <section class="screen" id="scr-home" data-screen="home">
+        <div class="home-header">
+          <div>
+            <h2>Hola, <span id="dash-nombre">—</span> 👋</h2>
+            <p class="home-sub">Plan <span id="dash-plan">—</span> · <span id="dash-retiros-rest">—</span> retiros disponibles</p>
+          </div>
+          <span class="badge" id="dash-badge">—</span>
+        </div>
+
+        <div id="toast-retiro" class="toast toast-info" style="display:none">
+          <i class="ti ti-bell"></i>
+          <div>
+            <strong>Nuevo retiro programado</strong>
+            <p id="toast-retiro-txt"></p>
+          </div>
+          <button class="toast-close" onclick="this.parentElement.style.display='none'"><i class="ti ti-x"></i></button>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat-card"><div class="stat-val" id="dash-kg">0</div><div class="stat-lbl">kg reciclados</div></div>
+          <div class="stat-card"><div class="stat-val" id="dash-retiros-rest2">0</div><div class="stat-lbl">retiros restantes</div></div>
+        </div>
+
+        <!-- Próximo retiro (se muestra si hay uno pendiente) -->
+        <div id="card-retiro-pendiente" class="card" style="display:none">
+          <div class="card-title"><i class="ti ti-clock"></i> Retiro programado</div>
+          <div class="retiro-info">
+            <div class="retiro-icon"><i class="ti ti-truck"></i></div>
+            <div class="retiro-detalle">
+              <div class="retiro-fecha" id="ret-fecha">—</div>
+              <div class="retiro-sub" id="ret-horario">—</div>
+              <div class="retiro-sub" id="ret-materiales">—</div>
+            </div>
+          </div>
+          <div class="retiro-actions">
+            <button class="btn btn-primary flex-1" onclick="Retiro.aprobar()"><i class="ti ti-circle-check"></i> Aprobar</button>
+            <button class="btn flex-1" onclick="Retiro.rechazar()"><i class="ti ti-x"></i> No puedo</button>
+          </div>
+        </div>
+
+        <!-- Card subida de fotos (aparece tras aprobar) -->
+        <div id="card-fotos" class="card" style="display:none">
+          <div class="card-title"><i class="ti ti-circle-check" style="color:#1D9E75"></i> Retiro aprobado — sube tus fotos</div>
+          <p class="card-sub" id="fotos-fecha-sub">—</p>
+          <p class="card-sub" style="margin-bottom:10px">Selecciona los materiales que tienes y sube fotos. Recuerda separarlos por tipo.</p>
+          <div class="chip-row" id="chip-materiales">
+            <button class="chip" data-material="PET" onclick="Fotos.toggleMaterial(this)"><i class="ti ti-bottle"></i> PET</button>
+            <button class="chip" data-material="Aluminio" onclick="Fotos.toggleMaterial(this)"><i class="ti ti-box"></i> Aluminio</button>
+            <button class="chip" data-material="Vidrio" onclick="Fotos.toggleMaterial(this)"><i class="ti ti-glass-full"></i> Vidrio</button>
+            <button class="chip" data-material="Cartón" onclick="Fotos.toggleMaterial(this)"><i class="ti ti-packages"></i> Cartón</button>
+          </div>
+          <div class="upload-zone" onclick="document.getElementById('input-fotos').click()">
+            <i class="ti ti-camera"></i>
+            <span>Toca para subir fotos</span>
+            <span class="upload-hint">Sube fotos de cada material por separado</span>
+          </div>
+          <input type="file" id="input-fotos" accept="image/*" multiple onchange="Fotos.agregar(this)">
+          <div class="photo-grid" id="photo-grid"></div>
+          <button class="btn btn-primary btn-full" style="margin-top:12px" onclick="Fotos.enviar()">
+            <i class="ti ti-send"></i> Confirmar y notificar al camión
+          </button>
+        </div>
+
+        <!-- Historial -->
+        <div class="card">
+          <div class="card-title"><i class="ti ti-history"></i> Últimos retiros</div>
+          <div id="historial-lista">
+            <div class="empty-state">Aún no tienes retiros realizados.</div>
+          </div>
+        </div>
+      </section>
+
+      <!-- ⑤ CAMIONES EN TIEMPO REAL -->
+      <section class="screen" id="scr-camiones" data-screen="camiones">
+        <h2 class="screen-title">Camiones en tiempo real</h2>
+        <p class="screen-sub">Toca un camión para ver su estado</p>
+        <div class="truck-map" id="truck-map">
+          <!-- Calles simuladas -->
+          <div class="road road-h" style="top:35%"></div>
+          <div class="road road-h" style="top:68%"></div>
+          <div class="road road-v" style="left:30%"></div>
+          <div class="road road-v" style="left:68%"></div>
+          <!-- Tu ubicación -->
+          <div class="home-pin">📍</div>
+          <!-- Camiones (posición dinámica por JS) -->
+          <div class="truck-pin" id="truck-pin-1" onclick="Camiones.seleccionar(1)" style="background:#1D9E75">
+            <span class="truck-label">Camión #1</span>🚛
+          </div>
+          <div class="truck-pin" id="truck-pin-2" onclick="Camiones.seleccionar(2)" style="background:#185FA5">
+            <span class="truck-label">Camión #2</span>🚛
+          </div>
+          <div class="truck-pin" id="truck-pin-3" onclick="Camiones.seleccionar(3)" style="background:#BA7517">
+            <span class="truck-label">Camión #3</span>🚛
+          </div>
+        </div>
+        <div class="truck-info-box" id="truck-info-box">
+          <i class="ti ti-info-circle"></i> Toca un camión para ver detalles
+        </div>
+        <div class="stat-grid">
+          <div class="stat-card clickable" onclick="Camiones.seleccionar(1)">
+            <div style="display:flex;align-items:center;gap:6px;justify-content:center;margin-bottom:4px">
+              <div class="dot" style="background:#1D9E75"></div>
+              <span class="stat-val" style="font-size:14px">Camión #1</span>
+            </div>
+            <div class="stat-lbl">Ruta Sur</div>
+            <span class="badge badge-green" style="margin-top:6px">En ruta</span>
+          </div>
+          <div class="stat-card clickable" onclick="Camiones.seleccionar(2)">
+            <div style="display:flex;align-items:center;gap:6px;justify-content:center;margin-bottom:4px">
+              <div class="dot" style="background:#185FA5"></div>
+              <span class="stat-val" style="font-size:14px">Camión #2</span>
+            </div>
+            <div class="stat-lbl">Ruta Norte</div>
+            <span class="badge badge-blue" style="margin-top:6px">Cerca</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- ⑥ MI PLAN -->
+      <section class="screen" id="scr-plan" data-screen="plan">
+        <h2 class="screen-title">Mi suscripción</h2>
+        <div class="card">
+          <div class="plan-activo-header">
+            <div>
+              <div class="plan-activo-nombre">Plan <span id="mi-plan-nombre">—</span></div>
+              <div class="plan-activo-desde">Activo desde <span id="mi-plan-desde">—</span></div>
+            </div>
+            <span class="badge badge-green">Activo</span>
+          </div>
+          <div class="plan-detalle">
+            <div class="plan-det-row"><span>Precio mensual</span><strong id="mi-plan-precio">—</strong></div>
+            <div class="plan-det-row"><span>Retiros incluidos</span><strong id="mi-plan-retiros">—</strong></div>
+            <div class="plan-det-row"><span>Próximo cobro</span><strong id="mi-plan-cobro">—</strong></div>
+            <div class="plan-det-row"><span>Método de pago</span><strong>Flow (tarjeta / transferencia)</strong></div>
+          </div>
+          <div class="divider"></div>
+          <h3 style="font-size:14px;font-weight:500;margin-bottom:12px">Cambiar plan</h3>
+
+          <div class="plan-card" id="cp-basico" onclick="MiPlan.cambiar('basico', this)">
+            <div class="plan-header"><div class="plan-nombre">Básico</div><div class="plan-precio">$9.900 <span>/mes</span></div></div>
+            <div class="plan-feat"><i class="ti ti-check"></i> 1 retiro al mes</div>
+          </div>
+          <div class="plan-card" id="cp-estandar" onclick="MiPlan.cambiar('estandar', this)">
+            <div class="plan-header"><div class="plan-nombre">Estándar</div><div class="plan-precio">$13.900 <span>/mes</span></div></div>
+            <div class="plan-feat"><i class="ti ti-check"></i> 2 retiros al mes</div>
+          </div>
+          <div class="plan-card" id="cp-premium" onclick="MiPlan.cambiar('premium', this)">
+            <div class="plan-header"><div class="plan-nombre">Premium</div><div class="plan-precio">$22.900 <span>/mes</span></div></div>
+            <div class="plan-feat"><i class="ti ti-check"></i> 4 retiros al mes</div>
+          </div>
+
+          <button class="btn btn-danger btn-full" style="margin-top:8px" onclick="MiPlan.cancelar()">
+            <i class="ti ti-x"></i> Cancelar suscripción
+          </button>
+        </div>
+      </section>
+
+      <!-- ⑦ PERFIL -->
+      <section class="screen" id="scr-perfil" data-screen="perfil">
+        <h2 class="screen-title">Mi perfil</h2>
+        <div class="card">
+          <div class="perfil-header">
+            <div class="perfil-avatar" id="perfil-avatar">—</div>
+            <div>
+              <div class="perfil-nombre" id="perfil-nombre">—</div>
+              <div class="perfil-email" id="perfil-email">—</div>
+            </div>
+          </div>
+          <div class="divider"></div>
+          <div class="form-group"><label>Dirección de retiro</label><input type="text" id="perfil-direccion" autocomplete="street-address"></div>
+          <div class="form-group"><label>Teléfono</label><input type="tel" id="perfil-telefono" autocomplete="tel"></div>
+          <button class="btn btn-primary" onclick="Perfil.guardar()">
+            <i class="ti ti-device-floppy"></i> Guardar cambios
+          </button>
+          <div class="divider"></div>
+          <button class="btn btn-full" onclick="Auth.logout()">
+            <i class="ti ti-logout"></i> Cerrar sesión
+          </button>
+        </div>
+      </section>
+
+      <!-- ⑧ ADMIN - PANEL COMPLETO -->
+      <section class="screen" id="scr-admin" data-screen="admin">
+        <div class="admin-header">
+          <h2>Administración</h2>
+          <span class="badge badge-gray">Operador</span>
+        </div>
+        <div class="stat-grid-4">
+          <div class="stat-card"><div class="stat-val" id="adm-clientes">0</div><div class="stat-lbl">clientes</div></div>
+          <div class="stat-card"><div class="stat-val" id="adm-ingresos">$0</div><div class="stat-lbl">ingresos/mes</div></div>
+          <div class="stat-card"><div class="stat-val" id="adm-retiros">0</div><div class="stat-lbl">retiros semana</div></div>
+          <div class="stat-card"><div class="stat-val">3</div><div class="stat-lbl">camiones</div></div>
+        </div>
+        <div class="admin-tabs">
+          <button class="admin-tab active" onclick="Admin.tab('clientes', this)">Clientes</button>
+          <button class="admin-tab" onclick="Admin.tab('rutas', this)">Rutas</button>
+          <button class="admin-tab" onclick="Admin.tab('ingresos', this)">Ingresos</button>
+          <button class="admin-tab" onclick="Admin.tab('solicitudes', this)">Solicitudes</button>
+        </div>
+        <div id="admin-panel-clientes" class="admin-panel active">
+          <div class="card">
+            <input type="text" placeholder="Buscar cliente..." id="admin-buscar" oninput="Admin.buscar(this.value)" class="search-input">
+            <div id="admin-lista-clientes">
+              <!-- Se llena dinámicamente desde Supabase -->
+            </div>
+            <button class="btn btn-full" style="margin-top:10px" onclick="Admin.exportar()">
+              <i class="ti ti-download"></i> Exportar lista CSV
+            </button>
+          </div>
+        </div>
+        <div id="admin-panel-rutas" class="admin-panel">
+          <div class="card" id="admin-rutas-content">
+            <!-- Se llena dinámicamente -->
+          </div>
+          <button class="btn btn-primary btn-full" onclick="Admin.notificarTodos()">
+            <i class="ti ti-send"></i> Notificar a todos los clientes
+          </button>
+        </div>
+        <div id="admin-panel-ingresos" class="admin-panel">
+          <div class="card" id="admin-ingresos-content">
+            <!-- Se llena dinámicamente desde Supabase + Flow -->
+          </div>
+        </div>
+        <div id="admin-panel-solicitudes" class="admin-panel">
+          <div class="card" id="admin-solicitudes-content">
+            <!-- Solicitudes con fotos pendientes -->
+          </div>
+        </div>
+      </section>
+
+    </main>
+
+    <!-- NAVEGACIÓN INFERIOR (solo para usuarios logueados) -->
+    <nav class="bottom-nav" id="bottom-nav" style="display:none">
+      <button class="nav-btn active" onclick="App.navigate('home')" id="nav-home">
+        <i class="ti ti-home"></i><span>Inicio</span>
+      </button>
+      <button class="nav-btn" onclick="App.navigate('camiones')" id="nav-camiones">
+        <i class="ti ti-truck"></i><span>Camiones</span>
+      </button>
+      <button class="nav-btn" onclick="App.navigate('plan')" id="nav-plan">
+        <i class="ti ti-credit-card"></i><span>Mi plan</span>
+      </button>
+      <button class="nav-btn" onclick="App.navigate('perfil')" id="nav-perfil">
+        <i class="ti ti-user"></i><span>Perfil</span>
+      </button>
+    </nav>
+
+  </div><!-- /#app -->
+
+  <!-- Scripts -->
+  <script src="/js/config.js"></script>
+  <script src="/js/supabase.js"></script>
+  <script src="/js/app.js"></script>
+  <script src="/js/auth.js"></script>
+  <script src="/js/registro.js"></script>
+  <script src="/js/pago.js"></script>
+  <script src="/js/retiro.js"></script>
+  <script src="/js/fotos.js"></script>
+  <script src="/js/camiones.js"></script>
+  <script src="/js/admin.js"></script>
+  <script src="/js/sw-register.js"></script>
+</body>
+</html>
