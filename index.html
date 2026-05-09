@@ -508,6 +508,9 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
             <div class="plan-feat"><i class="ti ti-check"></i> Seguimiento en tiempo real</div>
             <div class="plan-feat"><i class="ti ti-check"></i> Notificaciones push</div>
           </div>
+          <button class="btn btn-primary btn-full" onclick="elegirPlan('estandar')" style="margin-top:12px">
+            <i class="ti ti-arrow-right"></i> Elegir plan Estándar
+          </button>
         </div>
 
         <div class="plan-card">
@@ -521,6 +524,9 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
             <div class="plan-feat"><i class="ti ti-check"></i> Notificaciones push</div>
             <div class="plan-feat"><i class="ti ti-check"></i> Seguimiento en tiempo real</div>
           </div>
+          <button class="btn btn-full" onclick="elegirPlan('basico')" style="margin-top:12px">
+            <i class="ti ti-arrow-right"></i> Elegir plan Básico
+          </button>
         </div>
 
         <div class="plan-card">
@@ -534,10 +540,14 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
             <div class="plan-feat"><i class="ti ti-check"></i> Todos los materiales</div>
             <div class="plan-feat"><i class="ti ti-check"></i> Prioridad en ruta</div>
           </div>
+          <button class="btn btn-full" onclick="elegirPlan('premium')" style="margin-top:12px">
+            <i class="ti ti-arrow-right"></i> Elegir plan Premium
+          </button>
         </div>
 
-        <button class="btn btn-primary btn-full" onclick="App.navigate('registro')" style="margin-top:6px;margin-bottom:10px">
-          <i class="ti ti-gift"></i> Empezar con retiro gratis
+        <div class="divider"></div>
+        <button class="btn btn-primary btn-full" onclick="App.navigate('registro')" style="margin-bottom:10px">
+          <i class="ti ti-gift"></i> Probar gratis primero
         </button>
         <button class="btn btn-full" onclick="App.navigate('login')">
           <i class="ti ti-login"></i> Ya tengo cuenta
@@ -2577,6 +2587,19 @@ const Admin = {
   },
 };
 /* === sw-register.js === */
+/* ── ELEGIR PLAN ──────────────────────── */
+function elegirPlan(plan) {
+  // Guarda el plan elegido y va al registro
+  localStorage.setItem('planElegido', plan);
+  App.navigate('registro');
+  // Pre-selecciona el plan en el registro
+  setTimeout(() => {
+    if (typeof Registro !== 'undefined') {
+      Registro.planSeleccionado = plan;
+    }
+  }, 300);
+}
+
 /* ── RETIRO GRATIS ─────────────────────── */
 async function solicitarRetiroGratis() {
   const u = App.state.usuario;
