@@ -278,10 +278,15 @@ main { flex: 1; overflow-y: auto; }
 .password-wrap input { padding-right: 44px; }
 .password-toggle { position: absolute; right: 12px; top: 50%; transform: translateY(-50%); background: none; border: none; cursor: pointer; color: #888; font-size: 18px; min-height: auto; padding: 0; display: flex; align-items: center; }
 .password-toggle:hover { color: #1a1a1a; }
-.password-strength { margin-top: 6px; }
-.strength-bar { height: 4px; border-radius: 2px; background: var(--border); overflow: hidden; margin-bottom: 4px; }
-.strength-fill { height: 100%; border-radius: 2px; transition: width 0.3s, background 0.3s; width: 0%; }
-.strength-text { font-size: 11px; color: #888; }
+.password-strength { margin-top: 8px; }
+.strength-bar { height: 6px; border-radius: 3px; background: #eee; overflow: hidden; margin-bottom: 6px; }
+.strength-fill { height: 100%; border-radius: 3px; transition: width 0.4s, background 0.4s; width: 0%; }
+.strength-text { font-size: 12px; font-weight: 500; }
+.strength-reqs { display: flex; flex-direction: column; gap: 4px; margin-top: 8px; }
+.strength-req { display: flex; align-items: center; gap: 6px; font-size: 12px; color: #888; transition: color 0.2s; }
+.strength-req i { font-size: 14px; }
+.strength-req.met { color: #1D9E75; }
+.strength-req.unmet { color: #aaa; }
 
 /* PWA safe areas */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
@@ -439,33 +444,43 @@ main { flex: 1; overflow-y: auto; }
         <div class="step-bar">
           <div class="step-item active" id="step-dot-1"><span class="step-num">1</span><span class="step-label">Datos</span></div>
           <div class="step-line"></div>
-          <div class="step-item" id="step-dot-2"><span class="step-num">2</span><span class="step-label">Plan</span></div>
+          <div class="step-item" id="step-dot-2"><span class="step-num">2</span><span class="step-label">Ubicación</span></div>
           <div class="step-line"></div>
-          <div class="step-item" id="step-dot-3"><span class="step-num">3</span><span class="step-label">Ubicación</span></div>
-          <div class="step-line"></div>
-          <div class="step-item" id="step-dot-4"><span class="step-num">4</span><span class="step-label">Pago</span></div>
+          <div class="step-item" id="step-dot-3"><span class="step-num">3</span><span class="step-label">¡Listo!</span></div>
         </div>
 
         <!-- Paso 1: Datos personales -->
         <div class="reg-step" id="reg-step-1">
           <div class="form-card">
+            <div class="info-box" style="margin-bottom:14px">
+              <i class="ti ti-gift"></i>
+              <div><strong>¡Tu primer retiro es gratis!</strong><br>Regístrate y conoce el servicio sin compromiso.</div>
+            </div>
             <div class="row-2">
               <div class="form-group"><label>Nombre *</label><input type="text" id="reg-nombre" placeholder="María" autocomplete="given-name"></div>
               <div class="form-group"><label>Apellido *</label><input type="text" id="reg-apellido" placeholder="González" autocomplete="family-name"></div>
             </div>
             <div class="form-group"><label>Correo electrónico *</label><input type="email" id="reg-email" placeholder="maria@correo.com" autocomplete="email"></div>
-            <div class="form-group"><label>Teléfono *</label><input type="tel" id="reg-telefono" placeholder="+56 9 1234 5678" autocomplete="tel"></div>
+            <div class="form-group"><label>Teléfono</label><input type="tel" id="reg-telefono" placeholder="+56 9 1234 5678" autocomplete="tel"></div>
             <div class="form-group">
               <label>Contraseña *</label>
               <div class="password-wrap">
-                <input type="password" id="reg-password" placeholder="Mínimo 8 caracteres" autocomplete="new-password" oninput="checkPasswordStrength(this.value)">
+                <input type="password" id="reg-password" placeholder="Crea tu contraseña" autocomplete="new-password" oninput="checkPasswordStrength(this.value)">
                 <button type="button" class="password-toggle" onclick="togglePassword('reg-password', this)" tabindex="-1" aria-label="Mostrar contraseña">
                   <i class="ti ti-eye"></i>
                 </button>
               </div>
               <div class="password-strength">
                 <div class="strength-bar"><div class="strength-fill" id="strength-fill"></div></div>
-                <span class="strength-text" id="strength-text"></span>
+                <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+                  <span class="strength-text" id="strength-text"></span>
+                </div>
+                <div class="strength-reqs" id="strength-reqs">
+                  <div class="strength-req unmet" id="req-length"><i class="ti ti-circle"></i> Mínimo 8 caracteres</div>
+                  <div class="strength-req unmet" id="req-upper"><i class="ti ti-circle"></i> Al menos una letra mayúscula</div>
+                  <div class="strength-req unmet" id="req-number"><i class="ti ti-circle"></i> Al menos un número</div>
+                  <div class="strength-req unmet" id="req-special"><i class="ti ti-circle"></i> Al menos un símbolo (!@#$%...)</div>
+                </div>
               </div>
             </div>
             <div class="form-group">
@@ -594,6 +609,11 @@ main { flex: 1; overflow-y: auto; }
             <button class="btn btn-primary btn-full" id="btn-pagar" onclick="Pago.iniciar()">
               <i class="ti ti-shield-check"></i> Pagar con Flow y activar cuenta
             </button>
+            <div style="margin-top:8px">
+              <button class="btn btn-full" onclick="Pago.activarSinPago()" style="background:#E1F5EE;color:#085041;border-color:#5DCAA5">
+                <i class="ti ti-test-pipe"></i> Activar cuenta (modo prueba)
+              </button>
+            </div>
             <div id="admin-bypass" style="display:none;margin-top:8px">
               <button class="btn btn-full" onclick="Pago.activarAdmin()" style="background:#E1F5EE;color:#085041;border-color:#5DCAA5">
                 <i class="ti ti-settings"></i> Activar como administrador (sin pago)
@@ -615,6 +635,18 @@ main { flex: 1; overflow-y: auto; }
             <p class="home-sub">Plan <span id="dash-plan">—</span> · <span id="dash-retiros-rest">—</span> retiros disponibles</p>
           </div>
           <span class="badge" id="dash-badge">—</span>
+        </div>
+
+        <!-- Banner primer retiro gratis -->
+        <div id="banner-retiro-gratis" class="toast" style="display:none;background:linear-gradient(135deg,#1D9E75,#0F6E56);margin-bottom:10px">
+          <i class="ti ti-gift" style="font-size:24px;flex-shrink:0"></i>
+          <div style="flex:1">
+            <strong style="font-size:14px">¡Tu primer retiro es gratis!</strong>
+            <p style="font-size:12px;opacity:.9;margin-top:2px">Solicita tu retiro gratuito y conoce el servicio.</p>
+          </div>
+          <button class="btn" style="background:#fff;color:#0F6E56;border:none;font-size:12px;padding:6px 12px;min-height:auto;border-radius:8px;font-weight:500" onclick="solicitarRetiroGratis()">
+            Solicitar
+          </button>
         </div>
 
         <div id="toast-retiro" class="toast toast-info" style="display:none">
@@ -1229,6 +1261,12 @@ const Dashboard = {
     document.getElementById('dash-retiros-rest2').textContent = u.retiros_restantes ?? plan.retiros;
     document.getElementById('dash-kg').textContent = u.total_kg || 0;
 
+    // Mostrar banner retiro gratis
+    if (u.primer_retiro_gratis && !u.primer_retiro_usado) {
+      const banner = document.getElementById('banner-retiro-gratis');
+      if (banner) banner.style.display = 'flex';
+    }
+
     const badge = document.getElementById('dash-badge');
     badge.textContent = plan.nombre;
     badge.className = `badge ${plan.badge}`;
@@ -1637,6 +1675,43 @@ const Pago = {
   },
 
   /* Se llama cuando Flow redirige de vuelta tras pago exitoso */
+  async activarSinPago() {
+    const datos = Registro.getDatos();
+    const btn = document.querySelector('#reg-step-4 .btn-full:last-child');
+    
+    try {
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: datos.email,
+        password: datos.password,
+      });
+      if (authError) throw new Error(authError.message);
+      const userId = authData.user.id;
+      const plan = CONFIG.PLANES[datos.plan] || CONFIG.PLANES.basico;
+      await DB.crearUsuario(userId, {
+        nombre: datos.nombre,
+        apellido: datos.apellido,
+        email: datos.email,
+        telefono: datos.telefono,
+        direccion: datos.direccion,
+        depto: datos.depto,
+        ciudad: datos.ciudad,
+        region: datos.region,
+        referencia: datos.referencia,
+        lat: Ubicacion.lat,
+        lng: Ubicacion.lng,
+        plan: datos.plan,
+        retiros_restantes: plan.retiros,
+        total_kg: 0,
+        suscripcion_activa: true,
+        created_at: new Date().toISOString(),
+      });
+      alert('¡Cuenta creada! Por favor confirma tu correo electrónico para poder iniciar sesión.');
+      App.navigate('login');
+    } catch(err) {
+      App.showAlert('reg-error-4', 'Error: ' + err.message);
+    }
+  },
+
   async activarAdmin() {
     const datos = Registro.getDatos();
     const btn = document.getElementById('btn-pagar');
@@ -2086,6 +2161,20 @@ const Admin = {
   },
 };
 /* === sw-register.js === */
+/* ── RETIRO GRATIS ─────────────────────── */
+async function solicitarRetiroGratis() {
+  const u = App.state.usuario;
+  if (!u || u.primer_retiro_usado) {
+    alert('Ya utilizaste tu retiro gratuito.');
+    return;
+  }
+  // Marca retiro gratis como usado
+  await DB.actualizarUsuario(u.id, { primer_retiro_usado: true });
+  App.state.usuario.primer_retiro_usado = true;
+  document.getElementById('banner-retiro-gratis').style.display = 'none';
+  alert('¡Retiro gratuito solicitado! Recibirás una notificación con el día y hora de tu retiro.');
+}
+
 /* Registra el Service Worker para PWA */
 if ('serviceWorker' in navigator) {
   document.addEventListener("DOMContentLoaded", () => {
@@ -2113,27 +2202,40 @@ function checkPasswordStrength(pw) {
   const text = document.getElementById('strength-text');
   if (!fill || !text) return;
 
-  let score = 0;
-  let msg = '';
-  let color = '';
+  // Check each requirement
+  const reqs = {
+    length:  pw.length >= 8,
+    upper:   /[A-Z]/.test(pw),
+    number:  /[0-9]/.test(pw),
+    special: /[^A-Za-z0-9]/.test(pw),
+  };
 
-  if (pw.length >= 8) score++;
-  if (pw.length >= 12) score++;
-  if (/[A-Z]/.test(pw)) score++;
-  if (/[0-9]/.test(pw)) score++;
-  if (/[^A-Za-z0-9]/.test(pw)) score++;
+  // Update requirement indicators
+  Object.entries(reqs).forEach(([key, met]) => {
+    const el = document.getElementById('req-' + key);
+    if (!el) return;
+    el.className = 'strength-req ' + (met ? 'met' : 'unmet');
+    el.querySelector('i').className = met ? 'ti ti-circle-check' : 'ti ti-circle';
+  });
 
-  if (pw.length === 0) { fill.style.width = '0%'; text.textContent = ''; return; }
-  if (score <= 1) { color = '#E24B4A'; msg = 'Muy débil'; }
-  else if (score === 2) { color = '#F59E42'; msg = 'Débil'; }
-  else if (score === 3) { color = '#F5C842'; msg = 'Regular'; }
-  else if (score === 4) { color = '#5DCAA5'; msg = 'Fuerte'; }
-  else { color = '#1D9E75'; msg = 'Muy fuerte'; }
+  const score = Object.values(reqs).filter(Boolean).length;
 
-  fill.style.width = (score * 20) + '%';
-  fill.style.background = color;
-  text.textContent = msg;
-  text.style.color = color;
+  if (pw.length === 0) { fill.style.width = '0%'; text.textContent = ''; text.style.color = ''; return; }
+
+  const levels = [
+    { color: '#E24B4A', msg: 'Muy débil' },
+    { color: '#F59E42', msg: 'Débil' },
+    { color: '#F5C842', msg: 'Regular' },
+    { color: '#5DCAA5', msg: 'Fuerte' },
+    { color: '#1D9E75', msg: 'Muy fuerte 🔒' },
+  ];
+  const level = levels[Math.min(score, 4)];
+
+  fill.style.width = (score * 25) + '%';
+  fill.style.background = level.color;
+  text.textContent = level.msg;
+  text.style.color = level.color;
+  text.style.fontWeight = '500';
 }
 
 </script>
