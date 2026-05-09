@@ -1309,8 +1309,16 @@ const CONFIG = {
 
 /* Init Supabase */
 document.addEventListener('DOMContentLoaded', () => {
-  supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
-  App.init();
+  // Muestra welcome inmediatamente mientras carga Supabase
+  App.navigate('welcome');
+  
+  try {
+    supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_KEY);
+    App.init();
+  } catch(e) {
+    console.log('Supabase init error:', e);
+    App.navigate('welcome');
+  }
 });
 
 /* ── Usuarios ────────────────────────────── */
