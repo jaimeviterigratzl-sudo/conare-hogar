@@ -1462,6 +1462,76 @@ const Registro = {
   },
 
 
+  async _crearCuenta() {
+    const datos = Registro.getDatos();
+
+    // Actualiza step dots - todos done
+    for (let i = 1; i <= 3; i++) {
+      const dot = document.getElementById('step-dot-' + i);
+      if (dot) {
+        dot.className = 'step-item done';
+        const num = dot.querySelector('.step-num');
+        if (num) num.innerHTML = '<i class="ti ti-check"></i>';
+      }
+    }
+
+    // Oculta todos los steps
+    for (let i = 1; i <= 4; i++) {
+      const el = document.getElementById('reg-step-' + i);
+      if (el) el.style.display = 'none';
+    }
+
+    try {
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: datos.email,
+        password: datos.password,
+      });
+      if (authError) throw new Error(authError.message);
+      const userId = authData.user.id;
+
+      await DB.crearUsuario(userId, {
+        nombre: datos.nombre,
+        apellido: datos.apellido,
+        email: datos.email,
+        telefono: datos.telefono || '',
+        direccion: datos.direccion || '',
+        depto: datos.depto || '',
+        ciudad: datos.ciudad || '',
+        region: datos.region || '',
+        referencia: datos.referencia || '',
+        lat: Ubicacion.lat,
+        lng: Ubicacion.lng,
+        plan: 'basico',
+        retiros_restantes: 0,
+        primer_retiro_gratis: true,
+        primer_retiro_usado: false,
+        total_kg: 0,
+        suscripcion_activa: false,
+        created_at: new Date().toISOString(),
+      });
+
+      // Muestra mensaje de éxito
+      const regMain = document.getElementById('scr-registro');
+      if (regMain) {
+        const successDiv = document.createElement('div');
+        successDiv.style.cssText = 'padding:32px 16px;text-align:center';
+        successDiv.innerHTML = 
+          '<div style="width:72px;height:72px;background:#E1F5EE;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">' +
+          '<i class="ti ti-circle-check" style="font-size:38px;color:#1D9E75"></i></div>' +
+          '<div style="font-size:20px;font-weight:500;margin-bottom:8px">¡Bienvenido a CONARE HOGAR!</div>' +
+          '<div style="font-size:13px;color:#666;line-height:1.6;margin-bottom:20px">' +
+          'Enviamos un correo de confirmación a <strong>' + datos.email + '</strong>.<br>' +
+          'Confírmalo para activar tu cuenta y recibir tu <strong>primer retiro gratis 🎁</strong>.</div>' +
+          '<button class="btn btn-primary btn-full" onclick="App.navigate(`login`)">' +
+          '<i class="ti ti-login"></i> Ir a iniciar sesión</button>';
+        regMain.appendChild(successDiv);
+      }
+    } catch(err) {
+      alert('Error al crear cuenta: ' + err.message);
+      Registro.goStep(2);
+    }
+  },
+
   seleccionarPlan(key) {
     Registro.planSeleccionado = key;
     document.querySelectorAll('.plan-card').forEach(c => {
