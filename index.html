@@ -288,6 +288,41 @@ main { flex: 1; overflow-y: auto; }
 .strength-req.met { color: #1D9E75; }
 .strength-req.unmet { color: #aaa; }
 
+
+/* BIENVENIDA Y OPCIONES */
+.welcome-options { display: flex; flex-direction: column; gap: 10px; padding: 0 16px; margin-top: 8px; }
+.option-card { border-radius: var(--radius); padding: 16px; display: flex; align-items: center; gap: 14px; cursor: pointer; border: 0.5px solid var(--border); background: #fff; transition: transform 0.15s; }
+.option-card:active { transform: scale(0.98); }
+.option-card.primary { background: var(--verde); border-color: var(--verde); color: #fff; }
+.option-card.secondary { background: #fff; }
+.option-icon { width: 48px; height: 48px; border-radius: 14px; display: flex; align-items: center; justify-content: center; font-size: 24px; flex-shrink: 0; }
+.option-icon.green { background: rgba(255,255,255,0.2); }
+.option-icon.outline { background: var(--verde-light); }
+.option-title { font-size: 15px; font-weight: 500; }
+.option-sub { font-size: 12px; opacity: 0.85; margin-top: 2px; }
+.option-sub.dark { color: #666; opacity: 1; }
+
+/* COMO FUNCIONA */
+.how-step { display: flex; gap: 14px; padding: 14px 0; border-bottom: 0.5px solid var(--border); }
+.how-step:last-child { border-bottom: none; }
+.how-num { width: 32px; height: 32px; border-radius: 50%; background: var(--verde-light); color: var(--verde-dark); display: flex; align-items: center; justify-content: center; font-size: 13px; font-weight: 500; flex-shrink: 0; }
+.how-title { font-size: 14px; font-weight: 500; margin-bottom: 3px; }
+.how-desc { font-size: 13px; color: #666; line-height: 1.5; }
+
+/* MATERIALES */
+.material-item { border-radius: var(--radius-sm); border: 0.5px solid var(--border); padding: 12px; margin-bottom: 8px; }
+.material-header { display: flex; align-items: center; gap: 10px; margin-bottom: 8px; cursor: pointer; }
+.material-emoji { font-size: 24px; flex-shrink: 0; }
+.material-name { font-size: 14px; font-weight: 500; flex: 1; }
+.material-rules { display: flex; flex-direction: column; gap: 5px; }
+.rule { display: flex; align-items: flex-start; gap: 7px; font-size: 12px; color: #555; }
+.rule i { font-size: 14px; flex-shrink: 0; margin-top: 1px; }
+.rule.ok i { color: var(--verde); }
+.rule.no i { color: #E24B4A; }
+
+/* PLANES SECCIÓN */
+.planes-section { padding: 0; }
+
 /* PWA safe areas */
 @supports (padding-bottom: env(safe-area-inset-bottom)) {
   .bottom-nav { padding-bottom: calc(env(safe-area-inset-bottom) + 6px); }
@@ -319,14 +354,42 @@ main { flex: 1; overflow-y: auto; }
           <div class="hero-icon"><i class="ti ti-recycle"></i></div>
           <h1>CONARE HOGAR</h1>
           <p>Reciclaje domiciliario a tu puerta.<br>Simple, programado y confiable.</p>
+          <div style="display:flex;gap:8px;justify-content:center;margin-top:12px;flex-wrap:wrap">
+            <span class="badge badge-green"><i class="ti ti-map-pin"></i> Valdivia</span>
+            <span class="badge badge-blue"><i class="ti ti-calendar"></i> Lun–Sáb</span>
+            <span class="badge badge-gray"><i class="ti ti-recycle"></i> 8 materiales</span>
+          </div>
         </div>
-        <div class="welcome-actions">
-          <button class="btn btn-primary btn-full" onclick="App.navigate('registro')">
-            <i class="ti ti-user-plus"></i> Crear cuenta gratis
-          </button>
-          <button class="btn btn-full" onclick="App.navigate('login')" style="margin-top:10px">
-            <i class="ti ti-login"></i> Ya tengo cuenta
-          </button>
+
+        <div class="welcome-options">
+          <div class="option-card primary" onclick="App.navigate('registro')">
+            <div class="option-icon green"><i class="ti ti-gift"></i></div>
+            <div>
+              <div class="option-title">Probar gratis</div>
+              <div class="option-sub">Tu primer retiro sin costo · Sin tarjeta</div>
+            </div>
+            <i class="ti ti-arrow-right" style="margin-left:auto;opacity:.8"></i>
+          </div>
+          <div class="option-card secondary" onclick="App.navigate('planes')">
+            <div class="option-icon outline"><i class="ti ti-credit-card" style="color:var(--verde)"></i></div>
+            <div>
+              <div class="option-title" style="color:#1a1a1a">Ver planes y precios</div>
+              <div class="option-sub dark">Desde $9.900/mes · Cancela cuando quieras</div>
+            </div>
+            <i class="ti ti-arrow-right" style="margin-left:auto;color:#888"></i>
+          </div>
+          <div class="option-card secondary" onclick="App.navigate('como-funciona')">
+            <div class="option-icon outline"><i class="ti ti-info-circle" style="color:var(--verde)"></i></div>
+            <div>
+              <div class="option-title" style="color:#1a1a1a">¿Cómo funciona?</div>
+              <div class="option-sub dark">Conoce el servicio antes de decidir</div>
+            </div>
+            <i class="ti ti-arrow-right" style="margin-left:auto;color:#888"></i>
+          </div>
+        </div>
+
+        <div style="text-align:center;margin-top:16px">
+          <button class="btn-link" onclick="App.navigate('login')">Ya tengo cuenta → Iniciar sesión</button>
         </div>
         <p class="welcome-legal">Al registrarte aceptas nuestros <a href="#">Términos de servicio</a> y <a href="#">Política de privacidad</a>.</p>
       </section>
@@ -357,6 +420,215 @@ main { flex: 1; overflow-y: auto; }
           </button>
           <button class="btn-link" onclick="App.navigate('recuperar')">¿Olvidaste tu contraseña?</button>
         </div>
+      </section>
+
+
+      <!-- CÓMO FUNCIONA -->
+      <section class="screen" id="scr-como-funciona" data-screen="como-funciona">
+        <div class="screen-header">
+          <button class="btn-back" onclick="App.navigate('welcome')"><i class="ti ti-arrow-left"></i></button>
+          <h2>¿Cómo funciona?</h2>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><i class="ti ti-map-pin"></i> Cobertura actual</div>
+          <div style="background:var(--verde-light);border-radius:var(--radius-sm);padding:10px 14px;font-size:13px;color:var(--verde-text)">
+            📍 Actualmente operamos en <strong>Valdivia</strong>. Próximamente expandimos a más ciudades.
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><i class="ti ti-list-numbers"></i> Paso a paso</div>
+          <div class="how-step">
+            <div class="how-num">1</div>
+            <div><div class="how-title">Regístrate y elige cómo empezar</div>
+            <div class="how-desc">Crea tu cuenta gratis y usa tu primer retiro gratuito, o elige un plan mensual desde el inicio.</div></div>
+          </div>
+          <div class="how-step">
+            <div class="how-num">2</div>
+            <div><div class="how-title">Solicita tu retiro</div>
+            <div class="how-desc">Solicita con al menos <strong>2 días de anticipación</strong>. Recibirás confirmación con día y hora exacta.</div></div>
+          </div>
+          <div class="how-step">
+            <div class="how-num">3</div>
+            <div><div class="how-title">Aprueba y sube fotos</div>
+            <div class="how-desc">Cuando te notifiquemos el retiro, confírmalo y sube fotos de los materiales que tienes listos.</div></div>
+          </div>
+          <div class="how-step">
+            <div class="how-num">4</div>
+            <div><div class="how-title">Prepara tus materiales</div>
+            <div class="how-desc">Separa por tipo, limpia y deja en la entrada de tu domicilio en el horario acordado.</div></div>
+          </div>
+          <div class="how-step">
+            <div class="how-num">5</div>
+            <div><div class="how-title">Nuestro equipo retira</div>
+            <div class="how-desc">Un camión de CONARE HOGAR pasa a retirar tus materiales. Puedes seguir su ubicación en tiempo real.</div></div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title"><i class="ti ti-clock"></i> Días y horarios</div>
+          <div style="font-size:13px;line-height:1.8">
+            <div>📅 <strong>Lunes a sábado</strong> — no operamos domingos</div>
+            <div>⏰ <strong>08:00 a 18:00 hrs</strong></div>
+            <div>📋 <strong>Anticipación mínima:</strong> 2 días hábiles</div>
+          </div>
+        </div>
+
+        <button class="btn btn-full" onclick="App.navigate('guia-publica')" style="margin-bottom:10px"><i class="ti ti-info-circle"></i> Ver qué materiales aceptamos</button>
+        <button class="btn btn-primary btn-full" onclick="App.navigate('registro')" style="margin-bottom:10px">
+          <i class="ti ti-gift"></i> Empezar con retiro gratis
+        </button>
+        <button class="btn btn-full" onclick="App.navigate('planes')">
+          <i class="ti ti-credit-card"></i> Ver planes y precios
+        </button>
+      </section>
+
+      <!-- PLANES PÚBLICOS -->
+      <section class="screen" id="scr-planes" data-screen="planes">
+        <div class="screen-header">
+          <button class="btn-back" onclick="App.navigate('welcome')"><i class="ti ti-arrow-left"></i></button>
+          <h2>Planes y precios</h2>
+        </div>
+
+        <div style="text-align:center;font-size:13px;color:#666;margin-bottom:14px">
+          Sin contratos. Cancela cuando quieras.
+        </div>
+
+        <div class="plan-card" style="border:2px solid var(--verde);position:relative">
+          <div class="plan-popular">Más popular</div>
+          <div class="plan-header">
+            <div><div class="plan-nombre">Estándar</div><div class="plan-precio">$13.900 <span>/mes</span></div></div>
+            <span class="badge badge-blue">2 retiros/mes</span>
+          </div>
+          <div class="plan-features">
+            <div class="plan-feat"><i class="ti ti-check"></i> 2 retiros mensuales programados</div>
+            <div class="plan-feat"><i class="ti ti-check"></i> Todos los materiales aceptados</div>
+            <div class="plan-feat"><i class="ti ti-check"></i> Subida de fotos</div>
+            <div class="plan-feat"><i class="ti ti-check"></i> Seguimiento en tiempo real</div>
+            <div class="plan-feat"><i class="ti ti-check"></i> Notificaciones push</div>
+          </div>
+        </div>
+
+        <div class="plan-card">
+          <div class="plan-header">
+            <div><div class="plan-nombre">Básico</div><div class="plan-precio">$9.900 <span>/mes</span></div></div>
+            <span class="badge badge-gray">1 retiro/mes</span>
+          </div>
+          <div class="plan-features">
+            <div class="plan-feat"><i class="ti ti-check"></i> 1 retiro mensual programado</div>
+            <div class="plan-feat"><i class="ti ti-check"></i> PET y latas de aluminio</div>
+            <div class="plan-feat"><i class="ti ti-check"></i> Notificaciones push</div>
+            <div class="plan-feat"><i class="ti ti-check"></i> Seguimiento en tiempo real</div>
+          </div>
+        </div>
+
+        <div class="plan-card">
+          <div class="plan-header">
+            <div><div class="plan-nombre">Premium</div><div class="plan-precio">$22.900 <span>/mes</span></div></div>
+            <span class="badge badge-purple">4 retiros/mes</span>
+          </div>
+          <div class="plan-features">
+            <div class="plan-feat"><i class="ti ti-check"></i> 4 retiros mensuales</div>
+            <div class="plan-feat"><i class="ti ti-check"></i> Retiro a pedido</div>
+            <div class="plan-feat"><i class="ti ti-check"></i> Todos los materiales</div>
+            <div class="plan-feat"><i class="ti ti-check"></i> Prioridad en ruta</div>
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-full" onclick="App.navigate('registro')" style="margin-top:6px;margin-bottom:10px">
+          <i class="ti ti-gift"></i> Empezar con retiro gratis
+        </button>
+        <button class="btn btn-full" onclick="App.navigate('login')">
+          <i class="ti ti-login"></i> Ya tengo cuenta
+        </button>
+      </section>
+
+      <!-- GUÍA DE MATERIALES (acceso público) -->
+      <section class="screen" id="scr-guia-publica" data-screen="guia-publica">
+        <div class="screen-header">
+          <button class="btn-back" onclick="App.navigate('como-funciona')"><i class="ti ti-arrow-left"></i></button>
+          <h2>Qué reciclamos y cómo</h2>
+        </div>
+
+        <div class="material-item">
+          <div class="material-header"><div class="material-emoji">🧴</div><div class="material-name">Botellas PET (plástico)</div></div>
+          <div class="material-rules">
+            <div class="rule ok"><i class="ti ti-check"></i>Sin etiqueta</div>
+            <div class="rule ok"><i class="ti ti-check"></i>Aplastadas para reducir volumen</div>
+            <div class="rule ok"><i class="ti ti-check"></i>Enjuagadas y limpias</div>
+            <div class="rule ok"><i class="ti ti-check"></i>Sin tapa</div>
+            <div class="rule no"><i class="ti ti-x"></i>No mezclar con otros plásticos</div>
+          </div>
+        </div>
+
+        <div class="material-item">
+          <div class="material-header"><div class="material-emoji">🥫</div><div class="material-name">Latas de aluminio</div></div>
+          <div class="material-rules">
+            <div class="rule ok"><i class="ti ti-check"></i>Enjuagadas</div>
+            <div class="rule ok"><i class="ti ti-check"></i>Aplastadas</div>
+            <div class="rule ok"><i class="ti ti-check"></i>Limpias, sin residuos de comida</div>
+            <div class="rule no"><i class="ti ti-x"></i>No mezclar con latas de hojalata</div>
+          </div>
+        </div>
+
+        <div class="material-item">
+          <div class="material-header"><div class="material-emoji">🍾</div><div class="material-name">Botellas de vidrio</div></div>
+          <div class="material-rules">
+            <div class="rule ok"><i class="ti ti-check"></i>Enjuagadas y limpias</div>
+            <div class="rule ok"><i class="ti ti-check"></i>Sin tapa metálica</div>
+            <div class="rule ok"><i class="ti ti-check"></i>Enteras, sin romper</div>
+            <div class="rule no"><i class="ti ti-x"></i>No incluir vidrio roto o espejado</div>
+          </div>
+        </div>
+
+        <div class="material-item">
+          <div class="material-header"><div class="material-emoji">📦</div><div class="material-name">Cartón</div></div>
+          <div class="material-rules">
+            <div class="rule ok"><i class="ti ti-check"></i>Aplastado y limpio</div>
+            <div class="rule ok"><i class="ti ti-check"></i>Seco, sin humedad</div>
+            <div class="rule ok"><i class="ti ti-check"></i>Sin manchas de grasa o aceite</div>
+            <div class="rule no"><i class="ti ti-x"></i>No incluir cartón encerado</div>
+          </div>
+        </div>
+
+        <div class="material-item">
+          <div class="material-header"><div class="material-emoji">🥛</div><div class="material-name">Tetra Pak</div></div>
+          <div class="material-rules">
+            <div class="rule ok"><i class="ti ti-check"></i>Enjuagado por dentro</div>
+            <div class="rule ok"><i class="ti ti-check"></i>Aplastado</div>
+            <div class="rule ok"><i class="ti ti-check"></i>Sin tapa</div>
+          </div>
+        </div>
+
+        <div class="material-item">
+          <div class="material-header"><div class="material-emoji">🔩</div><div class="material-name">Metales</div></div>
+          <div class="material-rules">
+            <div class="rule ok"><i class="ti ti-check"></i>Limpios, sin residuos</div>
+            <div class="rule ok"><i class="ti ti-check"></i>Separados por tipo si es posible</div>
+            <div class="rule no"><i class="ti ti-x"></i>No incluir metales con sustancias peligrosas</div>
+          </div>
+        </div>
+
+        <div class="material-item">
+          <div class="material-header"><div class="material-emoji">💻</div><div class="material-name">Electrónicos (bajo volumen)</div></div>
+          <div class="material-rules">
+            <div class="rule ok"><i class="ti ti-check"></i>Celulares, tablets, cables, teclados</div>
+            <div class="rule ok"><i class="ti ti-check"></i>Pequeños electrodomésticos</div>
+            <div class="rule no"><i class="ti ti-x"></i>No incluir refrigeradores, lavadoras u otros grandes</div>
+            <div class="rule no"><i class="ti ti-x"></i>No incluir baterías de litio sin protección</div>
+          </div>
+        </div>
+
+        <div class="card" style="background:var(--verde-light);border-color:#5DCAA5">
+          <div style="font-size:13px;color:var(--verde-text);line-height:1.7">
+            <strong>⚠️ Regla general:</strong> Todos los materiales deben venir <strong>limpios, secos y separados por tipo</strong>. Los materiales sucios o mezclados no pueden ser procesados y serán devueltos.
+          </div>
+        </div>
+
+        <button class="btn btn-primary btn-full" onclick="App.navigate('registro')" style="margin-top:6px">
+          <i class="ti ti-gift"></i> Empezar con retiro gratis
+        </button>
       </section>
 
       <!-- ② RECUPERAR CONTRASEÑA -->
@@ -821,6 +1093,68 @@ main { flex: 1; overflow-y: auto; }
         </div>
       </section>
 
+
+      <!-- GUÍA DE MATERIALES (usuario logueado) -->
+      <section class="screen" id="scr-guia" data-screen="guia">
+        <h2 class="screen-title">Guía de reciclaje</h2>
+        <p class="screen-sub">Qué aceptamos y cómo prepararlo</p>
+
+        <div class="material-item">
+          <div class="material-header"><div class="material-emoji">🧴</div><div class="material-name">Botellas PET (plástico)</div></div>
+          <div class="material-rules">
+            <div class="rule ok"><i class="ti ti-check"></i>Sin etiqueta, aplastadas y enjuagadas</div>
+            <div class="rule ok"><i class="ti ti-check"></i>Sin tapa</div>
+            <div class="rule no"><i class="ti ti-x"></i>No mezclar con otros plásticos</div>
+          </div>
+        </div>
+        <div class="material-item">
+          <div class="material-header"><div class="material-emoji">🥫</div><div class="material-name">Latas de aluminio</div></div>
+          <div class="material-rules">
+            <div class="rule ok"><i class="ti ti-check"></i>Enjuagadas y aplastadas</div>
+            <div class="rule no"><i class="ti ti-x"></i>No mezclar con latas de hojalata</div>
+          </div>
+        </div>
+        <div class="material-item">
+          <div class="material-header"><div class="material-emoji">🍾</div><div class="material-name">Botellas de vidrio</div></div>
+          <div class="material-rules">
+            <div class="rule ok"><i class="ti ti-check"></i>Enjuagadas, enteras, sin tapa</div>
+            <div class="rule no"><i class="ti ti-x"></i>No vidrio roto o espejado</div>
+          </div>
+        </div>
+        <div class="material-item">
+          <div class="material-header"><div class="material-emoji">📦</div><div class="material-name">Cartón</div></div>
+          <div class="material-rules">
+            <div class="rule ok"><i class="ti ti-check"></i>Aplastado, limpio y seco</div>
+            <div class="rule no"><i class="ti ti-x"></i>No cartón encerado ni con grasa</div>
+          </div>
+        </div>
+        <div class="material-item">
+          <div class="material-header"><div class="material-emoji">🥛</div><div class="material-name">Tetra Pak</div></div>
+          <div class="material-rules">
+            <div class="rule ok"><i class="ti ti-check"></i>Enjuagado y aplastado, sin tapa</div>
+          </div>
+        </div>
+        <div class="material-item">
+          <div class="material-header"><div class="material-emoji">🔩</div><div class="material-name">Metales</div></div>
+          <div class="material-rules">
+            <div class="rule ok"><i class="ti ti-check"></i>Limpios y separados por tipo</div>
+            <div class="rule no"><i class="ti ti-x"></i>Sin sustancias peligrosas</div>
+          </div>
+        </div>
+        <div class="material-item">
+          <div class="material-header"><div class="material-emoji">💻</div><div class="material-name">Electrónicos (bajo volumen)</div></div>
+          <div class="material-rules">
+            <div class="rule ok"><i class="ti ti-check"></i>Celulares, cables, teclados, pequeños electrodomésticos</div>
+            <div class="rule no"><i class="ti ti-x"></i>No electrodomésticos grandes ni baterías de litio sueltas</div>
+          </div>
+        </div>
+        <div class="card" style="background:var(--verde-light);border-color:#5DCAA5;margin-top:4px">
+          <div style="font-size:13px;color:var(--verde-text);line-height:1.7">
+            <strong>⚠️ Regla general:</strong> Todos los materiales deben venir <strong>limpios, secos y separados por tipo</strong>.
+          </div>
+        </div>
+      </section>
+
       <!-- ⑧ ADMIN - PANEL COMPLETO -->
       <section class="screen" id="scr-admin" data-screen="admin">
         <div class="admin-header">
@@ -882,6 +1216,9 @@ main { flex: 1; overflow-y: auto; }
       </button>
       <button class="nav-btn" onclick="App.navigate('plan')" id="nav-plan">
         <i class="ti ti-credit-card"></i><span>Mi plan</span>
+      </button>
+      <button class="nav-btn" onclick="App.navigate('guia')" id="nav-guia">
+        <i class="ti ti-info-circle"></i><span>Guía</span>
       </button>
       <button class="nav-btn" onclick="App.navigate('perfil')" id="nav-perfil">
         <i class="ti ti-user"></i><span>Perfil</span>
@@ -1177,7 +1514,7 @@ const App = {
 
     // Bottom nav solo para usuarios logueados (excepto admin)
     const nav = document.getElementById('bottom-nav');
-    const clientScreens = ['home', 'camiones', 'plan', 'perfil'];
+    const clientScreens = ['home', 'camiones', 'plan', 'perfil', 'guia'];
     if (App.state.usuario && clientScreens.includes(screen)) {
       nav.style.display = 'flex';
       // Marca el botón activo
