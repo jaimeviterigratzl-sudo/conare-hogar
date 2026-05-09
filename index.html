@@ -1637,6 +1637,12 @@ const App = {
 
     // Scroll al tope
     window.scrollTo(0, 0);
+
+    // Acciones específicas por pantalla
+    if (screen === 'perfil' && App.state.usuario) Perfil.cargar();
+    if (screen === 'plan' && App.state.usuario) MiPlan.cargar();
+    if (screen === 'admin') Admin.cargar();
+    if (screen === 'home' && App.state.usuario) Dashboard.cargar();
   },
 
   /* Renderiza el topbar según el estado */
