@@ -1082,22 +1082,114 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
       <!-- ⑦ PERFIL -->
       <section class="screen" id="scr-perfil" data-screen="perfil">
         <h2 class="screen-title">Mi perfil</h2>
+
+        <!-- Avatar y nombre -->
         <div class="card">
           <div class="perfil-header">
             <div class="perfil-avatar" id="perfil-avatar">—</div>
-            <div>
+            <div style="flex:1">
               <div class="perfil-nombre" id="perfil-nombre">—</div>
               <div class="perfil-email" id="perfil-email">—</div>
+              <span class="badge badge-green" style="margin-top:5px" id="perfil-plan-badge">—</span>
             </div>
           </div>
-          <div class="divider"></div>
-          <div class="form-group"><label>Dirección de retiro</label><input type="text" id="perfil-direccion" autocomplete="street-address"></div>
-          <div class="form-group"><label>Teléfono</label><input type="tel" id="perfil-telefono" autocomplete="tel"></div>
-          <button class="btn btn-primary" onclick="Perfil.guardar()">
-            <i class="ti ti-device-floppy"></i> Guardar cambios
+        </div>
+
+        <!-- Datos personales -->
+        <div class="card">
+          <div class="card-title"><i class="ti ti-user"></i> Datos personales</div>
+          <div class="row-2">
+            <div class="form-group">
+              <label>Nombre</label>
+              <input type="text" id="perfil-nombre-input" autocomplete="given-name" placeholder="Tu nombre">
+            </div>
+            <div class="form-group">
+              <label>Apellido</label>
+              <input type="text" id="perfil-apellido-input" autocomplete="family-name" placeholder="Tu apellido">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Teléfono</label>
+            <input type="tel" id="perfil-telefono" autocomplete="tel" placeholder="+56 9 1234 5678">
+          </div>
+          <div id="perfil-success-personal" class="alert alert-success" style="display:none">
+            <i class="ti ti-circle-check"></i> Datos actualizados correctamente
+          </div>
+          <button class="btn btn-primary" onclick="Perfil.guardarPersonal()">
+            <i class="ti ti-device-floppy"></i> Guardar datos personales
           </button>
-          <div class="divider"></div>
-          <button class="btn btn-full" onclick="Auth.logout()">
+        </div>
+
+        <!-- Dirección de retiro -->
+        <div class="card">
+          <div class="card-title"><i class="ti ti-map-pin"></i> Dirección de retiro</div>
+          <div class="form-group">
+            <label>Calle y número</label>
+            <input type="text" id="perfil-direccion" autocomplete="street-address" placeholder="Av. Arturo Prat 456">
+          </div>
+          <div class="row-2">
+            <div class="form-group">
+              <label>Depto / Casa</label>
+              <input type="text" id="perfil-depto" placeholder="Depto 3B">
+            </div>
+            <div class="form-group">
+              <label>Ciudad</label>
+              <input type="text" id="perfil-ciudad" placeholder="Valdivia">
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Referencia</label>
+            <input type="text" id="perfil-referencia" placeholder="Portón verde, árbol en frente">
+          </div>
+          <div id="perfil-success-dir" class="alert alert-success" style="display:none">
+            <i class="ti ti-circle-check"></i> Dirección actualizada correctamente
+          </div>
+          <button class="btn btn-primary" onclick="Perfil.guardarDireccion()">
+            <i class="ti ti-map-pin"></i> Guardar dirección
+          </button>
+        </div>
+
+        <!-- Cambiar contraseña -->
+        <div class="card">
+          <div class="card-title"><i class="ti ti-lock"></i> Cambiar contraseña</div>
+          <div class="form-group">
+            <label>Nueva contraseña</label>
+            <div class="password-wrap">
+              <input type="password" id="perfil-nueva-pw" placeholder="Nueva contraseña" oninput="checkPerfilPassword(this.value)">
+              <button type="button" class="password-toggle" onclick="togglePassword('perfil-nueva-pw', this)" tabindex="-1">
+                <i class="ti ti-eye"></i>
+              </button>
+            </div>
+            <div class="password-strength" style="margin-top:6px">
+              <div class="strength-bar"><div class="strength-fill" id="perfil-strength-fill"></div></div>
+              <div class="strength-reqs">
+                <div class="strength-req unmet" id="perfil-req-length"><i class="ti ti-circle"></i> Mínimo 8 caracteres</div>
+                <div class="strength-req unmet" id="perfil-req-upper"><i class="ti ti-circle"></i> Al menos una mayúscula</div>
+                <div class="strength-req unmet" id="perfil-req-number"><i class="ti ti-circle"></i> Al menos un número</div>
+              </div>
+            </div>
+          </div>
+          <div class="form-group">
+            <label>Confirmar nueva contraseña</label>
+            <div class="password-wrap">
+              <input type="password" id="perfil-confirmar-pw" placeholder="Repite la contraseña">
+              <button type="button" class="password-toggle" onclick="togglePassword('perfil-confirmar-pw', this)" tabindex="-1">
+                <i class="ti ti-eye"></i>
+              </button>
+            </div>
+          </div>
+          <div id="perfil-error-pw" class="alert alert-error" style="display:none"></div>
+          <div id="perfil-success-pw" class="alert alert-success" style="display:none">
+            <i class="ti ti-circle-check"></i> Contraseña actualizada correctamente
+          </div>
+          <button class="btn btn-primary" onclick="Perfil.cambiarPassword()">
+            <i class="ti ti-lock"></i> Cambiar contraseña
+          </button>
+        </div>
+
+        <!-- Cerrar sesión -->
+        <div class="card">
+          <button class="btn btn-full" style="color:#791F1F;border-color:#F09595;background:#FCEBEB" onclick="Auth.logout()">
             <i class="ti ti-logout"></i> Cerrar sesión
           </button>
         </div>
@@ -2410,19 +2502,112 @@ const Perfil = {
     const u = App.state.usuario;
     if (!u) return;
     const initials = `${u.nombre?.charAt(0) || ''}${u.apellido?.charAt(0) || ''}`.toUpperCase();
+    const plan = CONFIG.PLANES[u.plan] || CONFIG.PLANES.basico;
+
     document.getElementById('perfil-avatar').textContent = initials;
-    document.getElementById('perfil-nombre').textContent = `${u.nombre} ${u.apellido}`;
+    document.getElementById('perfil-nombre').textContent = `${u.nombre || ''} ${u.apellido || ''}`.trim();
     document.getElementById('perfil-email').textContent = u.email;
-    const dir = [u.direccion, u.depto, u.ciudad].filter(Boolean).join(', ');
-    document.getElementById('perfil-direccion').value = dir;
-    document.getElementById('perfil-telefono').value = u.telefono || '';
+
+    const badge = document.getElementById('perfil-plan-badge');
+    if (badge) { badge.textContent = u.suscripcion_activa ? plan.nombre : 'Sin plan activo'; }
+
+    // Datos personales
+    const ni = document.getElementById('perfil-nombre-input');
+    const ai = document.getElementById('perfil-apellido-input');
+    if (ni) ni.value = u.nombre || '';
+    if (ai) ai.value = u.apellido || '';
+    const tel = document.getElementById('perfil-telefono');
+    if (tel) tel.value = u.telefono || '';
+
+    // Dirección
+    const dir = document.getElementById('perfil-direccion');
+    const dep = document.getElementById('perfil-depto');
+    const ciu = document.getElementById('perfil-ciudad');
+    const ref = document.getElementById('perfil-referencia');
+    if (dir) dir.value = u.direccion || '';
+    if (dep) dep.value = u.depto || '';
+    if (ciu) ciu.value = u.ciudad || '';
+    if (ref) ref.value = u.referencia || '';
+  },
+
+  async guardarPersonal() {
+    const u = App.state.usuario;
+    const nombre   = document.getElementById('perfil-nombre-input')?.value.trim();
+    const apellido = document.getElementById('perfil-apellido-input')?.value.trim();
+    const telefono = document.getElementById('perfil-telefono')?.value.trim();
+
+    if (!nombre || !apellido) { alert('Ingresa tu nombre y apellido.'); return; }
+
+    await DB.actualizarUsuario(u.id, { nombre, apellido, telefono });
+    App.state.usuario.nombre = nombre;
+    App.state.usuario.apellido = apellido;
+    App.state.usuario.telefono = telefono;
+
+    // Actualizar topbar
+    const initials = (nombre.charAt(0) + apellido.charAt(0)).toUpperCase();
+    document.getElementById('perfil-avatar').textContent = initials;
+    document.getElementById('perfil-nombre').textContent = `${nombre} ${apellido}`;
+    App.renderTopbar();
+
+    const ok = document.getElementById('perfil-success-personal');
+    if (ok) { ok.style.display = 'flex'; setTimeout(() => ok.style.display = 'none', 3000); }
+  },
+
+  async guardarDireccion() {
+    const u = App.state.usuario;
+    const direccion  = document.getElementById('perfil-direccion')?.value.trim();
+    const depto      = document.getElementById('perfil-depto')?.value.trim();
+    const ciudad     = document.getElementById('perfil-ciudad')?.value.trim();
+    const referencia = document.getElementById('perfil-referencia')?.value.trim();
+
+    if (!direccion || !ciudad) { alert('Ingresa la calle y la ciudad.'); return; }
+
+    await DB.actualizarUsuario(u.id, { direccion, depto, ciudad, referencia });
+    App.state.usuario.direccion  = direccion;
+    App.state.usuario.depto      = depto;
+    App.state.usuario.ciudad     = ciudad;
+    App.state.usuario.referencia = referencia;
+
+    const ok = document.getElementById('perfil-success-dir');
+    if (ok) { ok.style.display = 'flex'; setTimeout(() => ok.style.display = 'none', 3000); }
+  },
+
+  async cambiarPassword() {
+    const nueva    = document.getElementById('perfil-nueva-pw')?.value;
+    const confirma = document.getElementById('perfil-confirmar-pw')?.value;
+
+    if (!nueva || nueva.length < 8) {
+      App.showAlert('perfil-error-pw', 'La contraseña debe tener al menos 8 caracteres.');
+      return;
+    }
+    if (!/[A-Z]/.test(nueva)) {
+      App.showAlert('perfil-error-pw', 'Debe tener al menos una letra mayúscula.');
+      return;
+    }
+    if (!/[0-9]/.test(nueva)) {
+      App.showAlert('perfil-error-pw', 'Debe tener al menos un número.');
+      return;
+    }
+    if (nueva !== confirma) {
+      App.showAlert('perfil-error-pw', 'Las contraseñas no coinciden.');
+      return;
+    }
+
+    const { error } = await supabase.auth.updateUser({ password: nueva });
+    if (error) {
+      App.showAlert('perfil-error-pw', 'Error: ' + error.message);
+      return;
+    }
+
+    document.getElementById('perfil-nueva-pw').value = '';
+    document.getElementById('perfil-confirmar-pw').value = '';
+    const ok = document.getElementById('perfil-success-pw');
+    if (ok) { ok.style.display = 'flex'; setTimeout(() => ok.style.display = 'none', 3000); }
   },
 
   async guardar() {
-    const direccion = document.getElementById('perfil-direccion').value.trim();
-    const telefono  = document.getElementById('perfil-telefono').value.trim();
-    await DB.actualizarUsuario(App.state.usuario.id, { direccion, telefono });
-    alert('Cambios guardados correctamente.');
+    await Perfil.guardarPersonal();
+    await Perfil.guardarDireccion();
   },
 };
 
@@ -2598,6 +2783,27 @@ function elegirPlan(plan) {
       Registro.planSeleccionado = plan;
     }
   }, 300);
+}
+
+
+function checkPerfilPassword(pw) {
+  const reqs = {
+    length:  pw.length >= 8,
+    upper:   /[A-Z]/.test(pw),
+    number:  /[0-9]/.test(pw),
+  };
+  ['length','upper','number'].forEach(key => {
+    const el = document.getElementById('perfil-req-' + key);
+    if (!el) return;
+    el.className = 'strength-req ' + (reqs[key] ? 'met' : 'unmet');
+    el.querySelector('i').className = reqs[key] ? 'ti ti-circle-check' : 'ti ti-circle';
+  });
+  const score = Object.values(reqs).filter(Boolean).length;
+  const fill = document.getElementById('perfil-strength-fill');
+  if (!fill) return;
+  const colors = ['#eee','#E24B4A','#F59E42','#1D9E75'];
+  fill.style.width = (score * 33) + '%';
+  fill.style.background = colors[score] || '#1D9E75';
 }
 
 /* ── RETIRO GRATIS ─────────────────────── */
