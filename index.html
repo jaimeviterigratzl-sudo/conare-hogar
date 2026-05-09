@@ -1572,8 +1572,24 @@ const App = {
 
   /* Inicializa la app tras cargar Supabase */
   async init() {
+    // Detecta si viene de enlace de recuperación de contraseña
+    const hash = window.location.hash;
+    const search = window.location.search;
+    const isRecovery = (hash && hash.includes('type=recovery')) || 
+                       (search && search.includes('type=recovery')) ||
+                       (hash && hash.includes('access_token') && hash.includes('type=recovery'));
+
+    if (isRecovery) {
+      App.navigate('nueva-password');
+      return;
+    }
+
     // Escucha cambios de sesión (login/logout)
     supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === 'PASSWORD_RECOVERY') {
+        App.navigate('nueva-password');
+        return;
+      }
       if (session?.user) {
         await App.cargarUsuario(session.user.id);
       } else {
@@ -1588,6 +1604,9 @@ const App = {
       await App.cargarUsuario(session.user.id);
     } else {
       App.navigate('welcome');
+      // Fuerza display en caso de que CSS no lo aplique
+      const sw = document.getElementById('scr-welcome');
+      if (sw) { sw.style.display = 'block'; sw.classList.add('active'); }
     }
   },
 
@@ -1661,9 +1680,9 @@ const App = {
         <div class="topbar-avatar">OP</div>`;
     } else {
       right.innerHTML = `
-        <button class="topbar-admin-btn" onclick="App.navigate('admin')" id="btn-admin" style="display:none">
+        ${App.state.esAdmin ? `<button class="topbar-admin-btn" onclick="App.navigate('admin')" style="background:#E1F5EE;border-color:#5DCAA5;color:#085041">
           <i class="ti ti-settings"></i> Admin
-        </button>
+        </button>` : ''}
         <div class="topbar-avatar">${initials}</div>`;
     }
   },
