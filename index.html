@@ -984,7 +984,18 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
             <i class="ti ti-send"></i> Confirmar y notificar al camión
           </button>
         </div>
-
+<div class="card" style="background:linear-gradient(135deg,#1D9E75,#0F6E56);color:#fff">
+  <div style="display:flex;justify-content:space-between;align-items:center">
+    <div>
+      <div style="font-size:12px;opacity:.85">Tus CONAREPESOS</div>
+      <div style="font-size:28px;font-weight:500" id="conarepesos-saldo">0</div>
+      <div style="font-size:12px;opacity:.85">≈ <span id="conarepesos-clp">$0</span></div>
+    </div>
+    <button class="btn" style="background:#fff;color:#0F6E56;border:none" onclick="Conarepesos.abrirCanje()">
+      <i class="ti ti-gift"></i> Canjear
+    </button>
+  </div>
+</div>
         <!-- Historial -->
         <div class="card">
           <div class="card-title"><i class="ti ti-history"></i> Últimos retiros</div>
@@ -993,7 +1004,69 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
           </div>
         </div>
       </section>
+<!-- CANJE DE CONAREPESOS -->
+<section class="screen" id="scr-canje" data-screen="canje">
+  <div class="screen-header">
+    <button class="btn-back" onclick="App.navigate('home')"><i class="ti ti-arrow-left"></i></button>
+    <h2>Canjear CONAREPESOS</h2>
+  </div>
 
+  <div class="card">
+    <div class="card-title"><i class="ti ti-coin"></i> ¿Cuántos puntos quieres canjear?</div>
+    <div class="form-group">
+      <input type="number" id="canje-puntos-input" placeholder="Ej: 500" min="1">
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">Elige cómo recibirlo</div>
+
+    <div class="plan-card canje-tipo-card" id="canje-tipo-descuento_membresia" onclick="Conarepesos.seleccionarTipoCanje('descuento_membresia')">
+      <div class="plan-header">
+        <div><div class="plan-nombre">Descuento en membresía</div></div>
+        <i class="ti ti-credit-card" style="color:var(--verde)"></i>
+      </div>
+    </div>
+
+    <div class="plan-card canje-tipo-card" id="canje-tipo-retiro_gratis" onclick="Conarepesos.seleccionarTipoCanje('retiro_gratis')">
+      <div class="plan-header">
+        <div><div class="plan-nombre">Retiro gratis extra</div></div>
+        <i class="ti ti-truck" style="color:var(--verde)"></i>
+      </div>
+    </div>
+
+    <div class="plan-card canje-tipo-card" id="canje-tipo-transferencia" onclick="Conarepesos.seleccionarTipoCanje('transferencia')">
+      <div class="plan-header">
+        <div><div class="plan-nombre">Transferencia bancaria</div></div>
+        <i class="ti ti-building-bank" style="color:var(--verde)"></i>
+      </div>
+    </div>
+  </div>
+
+  <div class="card" id="canje-datos-bancarios" style="display:none">
+    <div class="card-title"><i class="ti ti-building-bank"></i> Datos bancarios</div>
+    <div class="form-group"><label>Banco</label><input type="text" id="canje-banco" placeholder="Banco de Chile"></div>
+    <div class="form-group">
+      <label>Tipo de cuenta</label>
+      <select id="canje-tipo-cuenta">
+        <option value="corriente">Cuenta corriente</option>
+        <option value="vista">Cuenta vista</option>
+        <option value="ahorro">Cuenta de ahorro</option>
+      </select>
+    </div>
+    <div class="form-group"><label>Número de cuenta</label><input type="text" id="canje-numero-cuenta" placeholder="00012345678"></div>
+    <div class="form-group"><label>RUT del titular</label><input type="text" id="canje-rut" placeholder="12.345.678-9"></div>
+  </div>
+
+  <button class="btn btn-primary btn-full" onclick="Conarepesos.confirmarCanje()">
+    <i class="ti ti-send"></i> Enviar solicitud de canje
+  </button>
+
+  <div class="card" style="margin-top:14px">
+    <div class="card-title"><i class="ti ti-history"></i> Historial de puntos</div>
+    <div id="conarepesos-historial"><div class="empty-state">Cargando...</div></div>
+  </div>
+</section>
       <!-- ⑤ CAMIONES EN TIEMPO REAL -->
       <section class="screen" id="scr-camiones" data-screen="camiones">
         <h2 class="screen-title">Camiones en tiempo real</h2>
@@ -1274,6 +1347,8 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
           <button class="admin-tab" onclick="Admin.tab('rutas', this)">Rutas</button>
           <button class="admin-tab" onclick="Admin.tab('ingresos', this)">Ingresos</button>
           <button class="admin-tab" onclick="Admin.tab('solicitudes', this)">Solicitudes</button>
+          <button class="admin-tab" data-tab="pesaje" onclick="Admin.tab('pesaje', this)">Pesaje</button>
+          <button class="admin-tab" data-tab="canjes" onclick="Admin.tab('canjes', this)">Canjes</button>
         </div>
         <div id="admin-panel-clientes" class="admin-panel active">
           <div class="card">
@@ -1304,8 +1379,49 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
             <!-- Solicitudes con fotos pendientes -->
           </div>
         </div>
+        <div id="admin-panel-pesaje" class="admin-panel">
+  <div class="card" id="admin-pesaje-content">
+    <!-- Se llena dinámicamente -->
+  </div>
+</div>
+<div id="admin-panel-canjes" class="admin-panel">
+  <div class="card" id="admin-canjes-content">
+    <!-- Se llena dinámicamente -->
+  </div>
+</div>
       </section>
-
+<!-- PESAJE DE MATERIALES (Admin) -->
+<section class="screen" id="scr-pesaje" data-screen="pesaje">
+  <div class="screen-header">
+    <button class="btn-back" onclick="App.navigate('admin')"><i class="ti ti-arrow-left"></i></button>
+    <h2>Ingresar pesaje</h2>
+  </div>
+  <div class="card">
+    <div class="card-title"><i class="ti ti-user"></i> Cliente: <span id="pesaje-cliente-nombre">—</span></div>
+    <div class="card-sub">Ingresa los kg de cada material retirado (deja en blanco los que no aplican).</div>
+  </div>
+  <div class="card">
+    <div class="row-2">
+      <div class="form-group"><label>PET (kg)</label><input type="number" step="0.1" id="pesaje-kg-pet" placeholder="0.0"></div>
+      <div class="form-group"><label>Aluminio (kg)</label><input type="number" step="0.1" id="pesaje-kg-aluminio" placeholder="0.0"></div>
+    </div>
+    <div class="row-2">
+      <div class="form-group"><label>Vidrio (kg)</label><input type="number" step="0.1" id="pesaje-kg-vidrio" placeholder="0.0"></div>
+      <div class="form-group"><label>Cartón (kg)</label><input type="number" step="0.1" id="pesaje-kg-carton" placeholder="0.0"></div>
+    </div>
+    <div class="row-2">
+      <div class="form-group"><label>Tetra Pak (kg)</label><input type="number" step="0.1" id="pesaje-kg-tetra_pak" placeholder="0.0"></div>
+      <div class="form-group"><label>Metales (kg)</label><input type="number" step="0.1" id="pesaje-kg-metales" placeholder="0.0"></div>
+    </div>
+    <div class="row-2">
+      <div class="form-group"><label>Electrónicos (kg)</label><input type="number" step="0.1" id="pesaje-kg-electronicos" placeholder="0.0"></div>
+      <div class="form-group"><label>Otros (kg)</label><input type="number" step="0.1" id="pesaje-kg-otros" placeholder="0.0"></div>
+    </div>
+  </div>
+  <button class="btn btn-primary btn-full" id="btn-guardar-pesaje" onclick="Admin.guardarPesajeActual()">
+    <i class="ti ti-device-floppy"></i> Guardar pesaje y acreditar puntos
+  </button>
+</section>
     </main>
 
     <!-- NAVEGACIÓN INFERIOR (solo para usuarios logueados) -->
@@ -1661,7 +1777,8 @@ const App = {
     if (screen === 'perfil' && App.state.usuario) Perfil.cargar();
     if (screen === 'plan' && App.state.usuario) MiPlan.cargar();
     if (screen === 'admin') Admin.cargar();
-    if (screen === 'home' && App.state.usuario) Dashboard.cargar();
+    if (screen === 'home' && App.state.usuario) { Dashboard.cargar(); Conarepesos.cargar(); }
+    if (screen === 'canje') Conarepesos.cargar();
   },
 
   /* Renderiza el topbar según el estado */
@@ -2653,6 +2770,8 @@ const Admin = {
     await Admin._renderRutas();
     Admin._renderIngresos(clientes);
     await Admin._renderSolicitudes();
+    await Admin._renderPesaje();
+    await Admin._renderCanjes();
   },
 
   _renderClientes(clientes) {
@@ -2907,7 +3026,307 @@ function checkPasswordStrength(pw) {
   text.style.color = level.color;
   text.style.fontWeight = '500';
 }
+/* ============================================
+   CONARE HOGAR — Módulo CONAREPESOS
+   Pesaje por material, saldo, y canje de puntos
+   Pegar este bloque completo antes de </script>
+   (después de todo el código existente)
+   ============================================ */
 
+/* ── Extensión de DB con funciones de CONAREPESOS ── */
+Object.assign(DB, {
+
+  async getConfigConarepesos() {
+    const { data: general } = await supabase.from('conarepesos_config_general').select('*').eq('id', 1).single();
+    const { data: materiales } = await supabase.from('conarepesos_config_material').select('*');
+    return { general, materiales: materiales || [] };
+  },
+
+  async getSaldoConarepesos(userId) {
+    const { data } = await supabase.from('conarepesos_saldo').select('saldo').eq('cliente_id', userId).single();
+    return data?.saldo || 0;
+  },
+
+  async getMovimientosConarepesos(userId) {
+    const { data } = await supabase
+      .from('conarepesos_movimientos')
+      .select('*')
+      .eq('cliente_id', userId)
+      .order('created_at', { ascending: false })
+      .limit(20);
+    return data || [];
+  },
+
+  /* Retiros con fotos enviadas, listos para pesar */
+  async getRetirosParaPesar() {
+    const { data: retiros } = await supabase
+      .from('retiros')
+      .select('*, usuarios(nombre, apellido)')
+      .not('fotos_enviadas_at', 'is', null)
+      .order('fotos_enviadas_at', { ascending: false })
+      .limit(30);
+    if (!retiros) return [];
+
+    // Marca cuáles ya tienen pesaje registrado
+    const ids = retiros.map(r => r.id);
+    const { data: yaPesados } = await supabase
+      .from('retiros_materiales')
+      .select('retiro_id')
+      .in('retiro_id', ids);
+    const pesadosSet = new Set((yaPesados || []).map(m => m.retiro_id));
+
+    return retiros.map(r => ({ ...r, yaPesado: pesadosSet.has(r.id) }));
+  },
+
+  /* Guarda el pesaje y acredita CONAREPESOS */
+  async guardarPesaje(retiro, pesos) {
+    // pesos = { pet: 2.5, aluminio: 0.8, ... } (solo materiales con kg > 0)
+    const config = await DB.getConfigConarepesos();
+    const configPorMaterial = {};
+    config.materiales.forEach(m => configPorMaterial[m.material] = m);
+
+    const filas = Object.entries(pesos)
+      .filter(([, kg]) => kg > 0)
+      .map(([material, kg]) => ({
+        retiro_id: retiro.id,
+        cliente_id: retiro.usuario_id,
+        material,
+        kg,
+      }));
+
+    if (filas.length === 0) return { ok: false, error: 'Ingresa al menos un material con peso.' };
+
+    const { error: errIns } = await supabase.from('retiros_materiales').insert(filas);
+    if (errIns) return { ok: false, error: errIns.message };
+
+    // Calcula puntos: base por retiro + extra por kg si supera el mínimo mensual del material
+    let puntosTotal = Number(config.general?.puntos_base_por_retiro || 0);
+    const detalle = [`+${config.general?.puntos_base_por_retiro || 0} pts base por retiro`];
+
+    for (const [material, kg] of Object.entries(pesos)) {
+      if (kg <= 0) continue;
+      const cfg = configPorMaterial[material];
+      if (!cfg) continue;
+      if (kg >= cfg.minimo_mensual_kg) {
+        const extra = kg * cfg.puntos_por_kg;
+        puntosTotal += extra;
+        detalle.push(`+${extra.toFixed(0)} pts por ${kg}kg de ${material} (superó mínimo de ${cfg.minimo_mensual_kg}kg)`);
+      } else {
+        detalle.push(`${kg}kg de ${material} no alcanzó el mínimo de ${cfg.minimo_mensual_kg}kg — sin puntos extra`);
+      }
+    }
+
+    const periodo = new Date().toISOString().slice(0, 7); // 'YYYY-MM'
+    const { error: errMov } = await supabase.from('conarepesos_movimientos').insert([{
+      cliente_id: retiro.usuario_id,
+      tipo: 'acreditacion',
+      puntos: puntosTotal,
+      descripcion: detalle.join(' · '),
+      periodo,
+    }]);
+    if (errMov) return { ok: false, error: errMov.message };
+
+    // Actualiza kg_total del retiro (para el historial del cliente)
+    const kgTotal = Object.values(pesos).reduce((s, v) => s + (v || 0), 0);
+    await supabase.from('retiros').update({ kg_total: kgTotal, estado: 'completado', completado_at: new Date().toISOString() }).eq('id', retiro.id);
+
+    return { ok: true, puntos: puntosTotal, detalle };
+  },
+
+  /* Solicitudes de canje */
+  async crearSolicitudCanje(clienteId, tipo, puntos, montoClp, datosBancarios = {}) {
+    const { error } = await supabase.from('solicitudes_canje').insert([{
+      cliente_id: clienteId,
+      tipo,
+      puntos_solicitados: puntos,
+      monto_clp: montoClp,
+      banco: datosBancarios.banco || null,
+      tipo_cuenta: datosBancarios.tipoCuenta || null,
+      numero_cuenta: datosBancarios.numeroCuenta || null,
+      rut_titular: datosBancarios.rut || null,
+    }]);
+    if (error) return { ok: false, error: error.message };
+
+    // Descuenta los puntos de inmediato (quedan "reservados" mientras se resuelve la solicitud)
+    await supabase.from('conarepesos_movimientos').insert([{
+      cliente_id: clienteId,
+      tipo: 'canje',
+      puntos: -puntos,
+      descripcion: `Solicitud de canje: ${tipo}`,
+    }]);
+    return { ok: true };
+  },
+
+  async getSolicitudesCanjePendientes() {
+    const { data } = await supabase
+      .from('solicitudes_canje')
+      .select('*, usuarios(nombre, apellido, email)')
+      .eq('estado', 'pendiente')
+      .order('created_at', { ascending: true });
+    return data || [];
+  },
+
+  async resolverSolicitudCanje(id, nuevoEstado) {
+    const { error } = await supabase
+      .from('solicitudes_canje')
+      .update({ estado: nuevoEstado, resuelto_at: new Date().toISOString() })
+      .eq('id', id);
+    return { ok: !error, error: error?.message };
+  },
+
+});
+
+/* ── Cliente: saldo y canje ─────────────────── */
+const Conarepesos = {
+  config: null,
+
+  async cargar() {
+    const u = App.state.usuario;
+    if (!u) return;
+    const saldo = await DB.getSaldoConarepesos(u.id);
+    Conarepesos.config = await DB.getConfigConarepesos();
+    const tasa = Conarepesos.config.general?.tasa_cambio_clp || 1;
+
+    const elSaldo = document.getElementById('conarepesos-saldo');
+    const elClp = document.getElementById('conarepesos-clp');
+    if (elSaldo) elSaldo.textContent = saldo.toLocaleString('es-CL');
+    if (elClp) elClp.textContent = App.formatPrecio(Math.round(saldo * tasa));
+
+    const movs = await DB.getMovimientosConarepesos(u.id);
+    const lista = document.getElementById('conarepesos-historial');
+    if (lista) {
+      if (!movs.length) {
+        lista.innerHTML = '<div class="empty-state">Aún no tienes movimientos.</div>';
+      } else {
+        lista.innerHTML = movs.map(m => `
+          <div style="display:flex;justify-content:space-between;align-items:center;padding:8px 0;border-bottom:0.5px solid var(--border)">
+            <div style="flex:1">
+              <div style="font-size:12px;color:#666">${new Date(m.created_at).toLocaleDateString('es-CL')}</div>
+              <div style="font-size:12px;color:#888">${m.descripcion || ''}</div>
+            </div>
+            <strong style="color:${m.puntos >= 0 ? 'var(--verde)' : '#791F1F'}">${m.puntos >= 0 ? '+' : ''}${m.puntos}</strong>
+          </div>`).join('');
+      }
+    }
+  },
+
+  abrirCanje() {
+    App.navigate('canje');
+  },
+
+  seleccionarTipoCanje(tipo) {
+    document.querySelectorAll('.canje-tipo-card').forEach(c => c.classList.remove('selected'));
+    document.getElementById(`canje-tipo-${tipo}`)?.classList.add('selected');
+    Conarepesos._tipoSeleccionado = tipo;
+    document.getElementById('canje-datos-bancarios').style.display = tipo === 'transferencia' ? 'block' : 'none';
+  },
+
+  async confirmarCanje() {
+    const u = App.state.usuario;
+    const puntos = parseInt(document.getElementById('canje-puntos-input')?.value || '0');
+    const tipo = Conarepesos._tipoSeleccionado;
+    const tasa = Conarepesos.config?.general?.tasa_cambio_clp || 1;
+
+    if (!tipo) { alert('Elige una modalidad de canje.'); return; }
+    if (!puntos || puntos <= 0) { alert('Ingresa cuántos CONAREPESOS quieres canjear.'); return; }
+
+    const saldoActual = await DB.getSaldoConarepesos(u.id);
+    if (puntos > saldoActual) { alert('No tienes suficientes CONAREPESOS.'); return; }
+
+    let datosBancarios = {};
+    if (tipo === 'transferencia') {
+      datosBancarios = {
+        banco: document.getElementById('canje-banco')?.value?.trim(),
+        tipoCuenta: document.getElementById('canje-tipo-cuenta')?.value,
+        numeroCuenta: document.getElementById('canje-numero-cuenta')?.value?.trim(),
+        rut: document.getElementById('canje-rut')?.value?.trim(),
+      };
+      if (!datosBancarios.banco || !datosBancarios.numeroCuenta || !datosBancarios.rut) {
+        alert('Completa tus datos bancarios para la transferencia.');
+        return;
+      }
+    }
+
+    const montoClp = Math.round(puntos * tasa);
+    const res = await DB.crearSolicitudCanje(u.id, tipo, puntos, montoClp, datosBancarios);
+    if (!res.ok) { alert('Error: ' + res.error); return; }
+
+    alert(`Solicitud enviada. ${puntos} CONAREPESOS (${App.formatPrecio(montoClp)}) quedarán pendientes de aprobación.`);
+    App.navigate('plan');
+    await Conarepesos.cargar();
+  },
+};
+
+/* ── Admin: pesaje y aprobación de canjes ──── */
+Object.assign(Admin, {
+
+  async _renderPesaje() {
+    const retiros = await DB.getRetirosParaPesar();
+    const content = document.getElementById('admin-pesaje-content');
+    if (!content) return;
+    const pendientes = retiros.filter(r => !r.yaPesado);
+    if (!pendientes.length) {
+      content.innerHTML = '<div class="empty-state">No hay retiros pendientes de pesaje.</div>';
+      return;
+    }
+    content.innerHTML = pendientes.map(r => `
+      <div style="padding:10px 0;border-bottom:0.5px solid var(--border)">
+        <div style="font-weight:500;font-size:13px">${r.usuarios?.nombre} ${r.usuarios?.apellido}</div>
+        <div style="font-size:11px;color:#666;margin-bottom:8px">${App.formatFecha(r.fecha_programada)} · ${(r.materiales||[]).join(', ')}</div>
+        <button class="btn btn-primary btn-full" style="font-size:13px" onclick='Admin.abrirPesaje(${JSON.stringify({id:r.id,usuario_id:r.usuario_id,nombre:r.usuarios?.nombre}).replace(/'/g,"&apos;")})'>
+          <i class="ti ti-scale"></i> Ingresar pesaje
+        </button>
+      </div>`).join('');
+  },
+
+  _retiroActualPesaje: null,
+
+  abrirPesaje(retiro) {
+    Admin._retiroActualPesaje = retiro;
+    document.getElementById('pesaje-cliente-nombre').textContent = retiro.nombre || '—';
+    ['pet','aluminio','vidrio','carton','tetra_pak','metales','electronicos','otros'].forEach(m => {
+      const el = document.getElementById(`pesaje-kg-${m}`);
+      if (el) el.value = '';
+    });
+    App.navigate('pesaje');
+  },
+
+  async guardarPesajeActual() {
+    const retiro = Admin._retiroActualPesaje;
+    if (!retiro) return;
+    const materiales = ['pet','aluminio','vidrio','carton','tetra_pak','metales','electronicos','otros'];
+    const pesos = {};
+    materiales.forEach(m => {
+      const val = parseFloat(document.getElementById(`pesaje-kg-${m}`)?.value);
+      if (val > 0) pesos[m] = val;
+    });
+
+    const btn = document.getElementById('btn-guardar-pesaje');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Guardando...';
+
+    const res = await DB.guardarPesaje(retiro, pesos);
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-device-floppy"></i> Guardar pesaje y acreditar puntos';
+
+    if (!res.ok) { alert('Error: ' + res.error); return; }
+
+    alert(`Pesaje guardado. Se acreditaron ${res.puntos} CONAREPESOS al cliente.`);
+    App.navigate('admin');
+    Admin.tab('pesaje', document.querySelector('.admin-tab[data-tab="pesaje"]'));
+    await Admin._renderPesaje();
+  },
+
+  async _renderCanjes() {
+    const solicitudes = await DB.getSolicitudesCanjePendientes();
+    const content = document.getElementById('admin-canjes-content');
+    if (!content) return;
+    if (!solicitudes.length) {
+      content.innerHTML = '<div class="empty-state">No hay solicitudes de canje pendientes.</div>';
+      return;
+    }
+    const nombres = { descuento_membresia: 'Descuento en membresía', retiro_gratis: 'Retiro
 </script>
 </body>
 </html>
