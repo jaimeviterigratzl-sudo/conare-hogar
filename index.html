@@ -1772,7 +1772,7 @@ const App = {
 
     // Scroll al tope
     window.scrollTo(0, 0);
-
+    App.renderTopbar();
     // Acciones específicas por pantalla
     if (screen === 'perfil' && App.state.usuario) Perfil.cargar();
     if (screen === 'plan' && App.state.usuario) MiPlan.cargar();
@@ -1790,17 +1790,12 @@ const App = {
     const initials = `${u.nombre?.charAt(0) || ''}${u.apellido?.charAt(0) || ''}`.toUpperCase();
 
     if (App.state.esAdmin) {
-      right.innerHTML = `
-        <button class="topbar-admin-btn" onclick="App.navigate('home')">
-          <i class="ti ti-arrow-left"></i> Ver como cliente
-        </button>
-        <div class="topbar-avatar">OP</div>`;
+      const enAdmin = document.getElementById('scr-admin')?.classList.contains('active');
+      right.innerHTML = enAdmin
+        ? `<button class="topbar-admin-btn" onclick="App.navigate('home')"><i class="ti ti-arrow-left"></i> Ver como cliente</button><div class="topbar-avatar">OP</div>`
+        : `<button class="topbar-admin-btn" onclick="App.navigate('admin')" style="background:#E1F5EE;border-color:#5DCAA5;color:#085041"><i class="ti ti-settings"></i> Volver a Admin</button><div class="topbar-avatar">${initials}</div>`;
     } else {
-      right.innerHTML = `
-        ${App.state.esAdmin ? `<button class="topbar-admin-btn" onclick="App.navigate('admin')" style="background:#E1F5EE;border-color:#5DCAA5;color:#085041">
-          <i class="ti ti-settings"></i> Admin
-        </button>` : ''}
-        <div class="topbar-avatar">${initials}</div>`;
+      right.innerHTML = `<div class="topbar-avatar">${initials}</div>`;
     }
   },
 
