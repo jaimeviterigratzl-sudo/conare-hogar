@@ -3326,7 +3326,31 @@ Object.assign(Admin, {
       content.innerHTML = '<div class="empty-state">No hay solicitudes de canje pendientes.</div>';
       return;
     }
-    const nombres = { descuento_membresia: 'Descuento en membresía', retiro_gratis: 'Retiro
+    const nombres = { descuento_membresia: 'Descuento en membresía', retiro_gratis: 'Retiro gratis', transferencia: 'Transferencia bancaria' };
+    content.innerHTML = solicitudes.map(s => `
+      <div style="padding:10px 0;border-bottom:0.5px solid var(--border)">
+        <div style="font-weight:500;font-size:13px">${s.usuarios?.nombre} ${s.usuarios?.apellido}</div>
+        <div style="font-size:12px;color:#666;margin-bottom:4px">${nombres[s.tipo] || s.tipo} · ${s.puntos_solicitados} pts · ${App.formatPrecio(s.monto_clp || 0)}</div>
+        ${s.tipo === 'transferencia' ? `<div style="font-size:11px;color:#888;margin-bottom:8px">${s.banco || ''} · ${s.tipo_cuenta || ''} · ${s.numero_cuenta || ''} · RUT ${s.rut_titular || ''}</div>` : ''}
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-primary flex-1" style="font-size:12px" onclick="Admin.resolverCanje('${s.id}', 'aprobado')">
+            <i class="ti ti-check"></i> Aprobar
+          </button>
+          <button class="btn flex-1" style="font-size:12px" onclick="Admin.resolverCanje('${s.id}', 'rechazado')">
+            <i class="ti ti-x"></i> Rechazar
+          </button>
+        </div>
+      </div>`).join('');
+  },
+
+  async resolverCanje(id, estado) {
+    const res = await DB.resolverSolicitudCanje(id, estado);
+    if (!res.ok) { alert('Error: ' + res.error); return; }
+    await Admin._renderCanjes();
+  },
+
+});
+
 </script>
 </body>
 </html>
