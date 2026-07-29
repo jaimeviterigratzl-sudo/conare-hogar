@@ -1349,6 +1349,7 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
           <button class="admin-tab" onclick="Admin.tab('solicitudes', this)">Solicitudes</button>
           <button class="admin-tab" data-tab="pesaje" onclick="Admin.tab('pesaje', this)">Pesaje</button>
           <button class="admin-tab" data-tab="canjes" onclick="Admin.tab('canjes', this)">Canjes</button>
+          <button class="admin-tab" data-tab="config" onclick="Admin.tab('config', this)">Config</button>
         </div>
         <div id="admin-panel-clientes" class="admin-panel active">
           <div class="card">
@@ -1388,6 +1389,31 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
   <div class="card" id="admin-canjes-content">
     <!-- Se llena dinámicamente -->
   </div>
+</div>
+<div id="admin-panel-config" class="admin-panel">
+  <div class="card">
+    <div class="card-title"><i class="ti ti-settings"></i> Configuración general</div>
+    <div class="row-2">
+      <div class="form-group">
+        <label>Puntos base por retiro</label>
+        <input type="number" id="config-puntos-base" step="1">
+      </div>
+      <div class="form-group">
+        <label>Tasa de cambio (1 pt = X CLP)</label>
+        <input type="number" id="config-tasa-cambio" step="0.01">
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><i class="ti ti-recycle"></i> Mínimos y puntos por material</div>
+    <div class="card-sub">Mínimo mensual (kg) para que ese material sume puntos extra, y puntos otorgados por cada kg.</div>
+    <div id="config-materiales-lista"></div>
+  </div>
+
+  <button class="btn btn-primary btn-full" id="btn-guardar-config" onclick="Admin.guardarConfigConarepesos()">
+    <i class="ti ti-device-floppy"></i> Guardar configuración
+  </button>
 </div>
       </section>
 <!-- PESAJE DE MATERIALES (Admin) -->
@@ -2767,6 +2793,7 @@ const Admin = {
     await Admin._renderSolicitudes();
     await Admin._renderPesaje();
     await Admin._renderCanjes();
+    await Admin._renderConfig();
   },
 
   _renderClientes(clientes) {
@@ -3345,7 +3372,72 @@ Object.assign(Admin, {
   },
 
 });
+const NOMBRES_MATERIAL = {
+  pet: 'PET (plástico)', aluminio: 'Aluminio', vidrio: 'Vidrio', carton: 'Cartón',
+  tetra_pak: 'Tetra Pak', metales: 'Metales', electronicos: 'Electrónicos', otros: 'Otros',
+};
 
+Object.assign(DB, {
+  async actualizarConfigGeneral(puntosBase, tasaCambio) {
+    const { error } = await supabase
+      .from('conarepesos_config_general')
+      .update({ puntos_base_por_retiro: puntosBase, tasa_cambio_clp: tasaCambio, updated_at: new Date().toISOString() })
+      .eq('id', 1);
+    return { ok: !error, error: error?.message };
+  },
+  async actualizarConfigMaterial(material, minimoKg, puntosPorKg) {
+    const { error } = await supabase
+      .from('conarepesos_config_material')
+      .update({ minimo_mensual_kg: minimoKg, puntos_por_kg: puntosPorKg, updated_at: new Date().toISOString() })
+      .eq('material', material);
+    return { ok: !error, error: error?.message };
+  },
+});
+
+Object.assign(Admin, {
+  async _renderConfig() {
+    const config = await DB.getConfigConarepesos();
+    const gEl = document.getElementById('config-puntos-base');
+    const tEl = document.getElementById('config-tasa-cambio');
+    if (gEl) gEl.value = config.general?.puntos_base_por_retiro ?? 50;
+    if (tEl) tEl.value = config.general?.tasa_cambio_clp ?? 1;
+
+    const lista = document.getElementById('config-materiales-lista');
+    if (!lista) return;
+    lista.innerHTML = config.materiales.map(m => `
+      <div class="row-2" style="margin-bottom:6px">
+        <div class="form-group">
+          <label>${NOMBRES_MATERIAL[m.material] || m.material} — mínimo (kg)</label>
+          <input type="number" step="0.1" id="config-min-${m.material}" value="${m.minimo_mensual_kg}">
+        </div>
+        <div class="form-group">
+          <label>${NOMBRES_MATERIAL[m.material] || m.material} — pts/kg</label>
+          <input type="number" step="0.1" id="config-pts-${m.material}" value="${m.puntos_por_kg}">
+        </div>
+      </div>`).join('');
+  },
+
+  async guardarConfigConarepesos() {
+    const btn = document.getElementById('btn-guardar-config');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Guardando...';
+
+    const puntosBase = parseFloat(document.getElementById('config-puntos-base')?.value || 0);
+    const tasaCambio = parseFloat(document.getElementById('config-tasa-cambio')?.value || 1);
+    await DB.actualizarConfigGeneral(puntosBase, tasaCambio);
+
+    const materiales = ['pet','aluminio','vidrio','carton','tetra_pak','metales','electronicos','otros'];
+    for (const m of materiales) {
+      const min = parseFloat(document.getElementById(`config-min-${m}`)?.value || 0);
+      const pts = parseFloat(document.getElementById(`config-pts-${m}`)?.value || 0);
+      await DB.actualizarConfigMaterial(m, min, pts);
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-device-floppy"></i> Guardar configuración';
+    alert('Configuración guardada. Los nuevos valores se aplicarán a los próximos pesajes.');
+  },
+});
 </script>
 </body>
 </html>
