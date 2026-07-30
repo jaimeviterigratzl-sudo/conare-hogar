@@ -2923,6 +2923,9 @@ const Admin = {
             ${s.camion_asignado ? 'Asignado' : 'Pendiente'}
           </span>
         </div>
+        ${(s.foto_urls && s.foto_urls.length) ? `<div style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px">
+  ${s.foto_urls.map(url => `<img src="${url}" style="width:60px;height:60px;border-radius:8px;object-fit:cover;border:0.5px solid var(--border)" onclick="window.open('${url}','_blank')">`).join('')}
+</div>` : ''}
         ${!s.camion_asignado ? `
           <button class="btn btn-primary btn-full" style="font-size:13px" onclick="Admin.asignarCamion('${s.id}')">
             <i class="ti ti-truck"></i> Asignar camión
