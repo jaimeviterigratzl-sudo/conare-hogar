@@ -996,6 +996,14 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
     </button>
   </div>
 </div>
+        <div class="card">
+  <button class="btn btn-full" style="color:#791F1F;border-color:#F09595;background:#FCEBEB" onclick="solicitarRetiroUrgente()">
+    <i class="ti ti-alert-triangle"></i> Solicitar retiro urgente
+  </button>
+  <div style="font-size:11px;color:#888;margin-top:6px;text-align:center">
+    Úsalo solo si tienes mucho material acumulado y no puedes esperar tu próximo retiro programado.
+  </div>
+</div>
         <!-- Historial -->
         <div class="card">
           <div class="card-title"><i class="ti ti-history"></i> Últimos retiros</div>
@@ -1350,6 +1358,7 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
           <button class="admin-tab" data-tab="pesaje" onclick="Admin.tab('pesaje', this)">Pesaje</button>
           <button class="admin-tab" data-tab="canjes" onclick="Admin.tab('canjes', this)">Canjes</button>
           <button class="admin-tab" data-tab="config" onclick="Admin.tab('config', this)">Config</button>
+          <button class="admin-tab" data-tab="urgentes" onclick="Admin.tab('urgentes', this)">Urgentes</button>
         </div>
         <div id="admin-panel-clientes" class="admin-panel active">
           <div class="card">
@@ -1404,7 +1413,7 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
       </div>
     </div>
   </div>
-
+  
   <div class="card">
     <div class="card-title"><i class="ti ti-recycle"></i> Mínimos y puntos por material</div>
     <div class="card-sub">Mínimo mensual (kg) para que ese material sume puntos extra, y puntos otorgados por cada kg.</div>
@@ -1414,6 +1423,11 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
   <button class="btn btn-primary btn-full" id="btn-guardar-config" onclick="Admin.guardarConfigConarepesos()">
     <i class="ti ti-device-floppy"></i> Guardar configuración
   </button>
+</div>
+        <div id="admin-panel-urgentes" class="admin-panel">
+  <div class="card" id="admin-urgentes-content">
+    <!-- Se llena dinámicamente -->
+  </div>
 </div>
       </section>
 <!-- PESAJE DE MATERIALES (Admin) -->
@@ -1446,6 +1460,26 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
   </div>
   <button class="btn btn-primary btn-full" id="btn-guardar-pesaje" onclick="Admin.guardarPesajeActual()">
     <i class="ti ti-device-floppy"></i> Guardar pesaje y acreditar puntos
+  </button>
+</section>
+<!-- PROGRAMAR RETIRO URGENTE (Admin) -->
+<section class="screen" id="scr-programar-urgente" data-screen="programar-urgente">
+  <div class="screen-header">
+    <button class="btn-back" onclick="App.navigate('admin')"><i class="ti ti-arrow-left"></i></button>
+    <h2>Programar retiro urgente</h2>
+  </div>
+  <div class="card">
+    <div class="card-title"><i class="ti ti-user"></i> Cliente: <span id="urgente-cliente-nombre">—</span></div>
+  </div>
+  <div class="card">
+    <div class="form-group"><label>Fecha del retiro</label><input type="date" id="urgente-fecha"></div>
+    <div class="row-2">
+      <div class="form-group"><label>Hora inicio</label><input type="time" id="urgente-hora-inicio" value="08:00"></div>
+      <div class="form-group"><label>Hora fin</label><input type="time" id="urgente-hora-fin" value="10:00"></div>
+    </div>
+  </div>
+  <button class="btn btn-primary btn-full" id="btn-programar-urgente" onclick="Admin.guardarProgramacionUrgente()">
+    <i class="ti ti-calendar-check"></i> Confirmar fecha y notificar al cliente
   </button>
 </section>
     </main>
@@ -1602,6 +1636,7 @@ const DB = {
       .select('*')
       .eq('usuario_id', userId)
       .eq('estado', 'pendiente')
+      .not('fecha_programada', 'is', null)
       .order('fecha_programada', { ascending: true })
       .limit(1);
     if (error) console.error('getRetirosPendientes:', error);
@@ -2794,6 +2829,7 @@ const Admin = {
     await Admin._renderPesaje();
     await Admin._renderCanjes();
     await Admin._renderConfig();
+    await Admin._renderUrgentes();
   },
 
   _renderClientes(clientes) {
@@ -3436,6 +3472,98 @@ Object.assign(Admin, {
     btn.disabled = false;
     btn.innerHTML = '<i class="ti ti-device-floppy"></i> Guardar configuración';
     alert('Configuración guardada. Los nuevos valores se aplicarán a los próximos pesajes.');
+  },
+});
+Object.assign(DB, {
+  async solicitarRetiroUrgente(userId) {
+    const { error } = await supabase.from('retiros').insert([{
+      usuario_id: userId,
+      urgente: true,
+      estado: 'pendiente',
+      fecha_programada: null,
+      notas: 'Solicitud de retiro urgente hecha por el cliente',
+    }]);
+    return { ok: !error, error: error?.message };
+  },
+
+  async getSolicitudesUrgentes() {
+    const { data } = await supabase
+      .from('retiros')
+      .select('*, usuarios(nombre, apellido, direccion, ciudad, telefono)')
+      .eq('urgente', true)
+      .is('fecha_programada', null)
+      .order('created_at', { ascending: true });
+    return data || [];
+  },
+
+  async programarRetiroUrgente(retiroId, fecha, horaInicio, horaFin) {
+    const { error } = await supabase
+      .from('retiros')
+      .update({ fecha_programada: fecha, hora_inicio: horaInicio, hora_fin: horaFin })
+      .eq('id', retiroId);
+    return { ok: !error, error: error?.message };
+  },
+});
+
+async function solicitarRetiroUrgente() {
+  const u = App.state.usuario;
+  if (!u) return;
+  if (!confirm('¿Confirmas que necesitas un retiro urgente? El equipo te asignará una fecha lo antes posible según su disponibilidad.')) return;
+  const res = await DB.solicitarRetiroUrgente(u.id);
+  if (!res.ok) { alert('Error: ' + res.error); return; }
+  alert('Solicitud enviada. Te avisaremos apenas tengamos una fecha disponible.');
+}
+
+Object.assign(Admin, {
+  async _renderUrgentes() {
+    const solicitudes = await DB.getSolicitudesUrgentes();
+    const content = document.getElementById('admin-urgentes-content');
+    if (!content) return;
+    if (!solicitudes.length) {
+      content.innerHTML = '<div class="empty-state">No hay solicitudes urgentes pendientes.</div>';
+      return;
+    }
+    content.innerHTML = solicitudes.map(s => `
+      <div style="padding:10px 0;border-bottom:0.5px solid var(--border)">
+        <div style="font-weight:500;font-size:13px">${s.usuarios?.nombre} ${s.usuarios?.apellido}</div>
+        <div style="font-size:11px;color:#666;margin-bottom:8px">${s.usuarios?.direccion || '—'}, ${s.usuarios?.ciudad || '—'} · ${s.usuarios?.telefono || 'sin teléfono'}</div>
+        <button class="btn btn-primary btn-full" style="font-size:13px" onclick='Admin.abrirProgramarUrgente(${JSON.stringify({id:s.id,nombre:`${s.usuarios?.nombre||""} ${s.usuarios?.apellido||""}`}).replace(/'/g,"&apos;")})'>
+          <i class="ti ti-calendar"></i> Asignar fecha
+        </button>
+      </div>`).join('');
+  },
+
+  _urgenteActual: null,
+
+  abrirProgramarUrgente(retiro) {
+    Admin._urgenteActual = retiro;
+    document.getElementById('urgente-cliente-nombre').textContent = retiro.nombre || '—';
+    document.getElementById('urgente-fecha').value = '';
+    App.navigate('programar-urgente');
+  },
+
+  async guardarProgramacionUrgente() {
+    const retiro = Admin._urgenteActual;
+    if (!retiro) return;
+    const fecha = document.getElementById('urgente-fecha')?.value;
+    const horaInicio = document.getElementById('urgente-hora-inicio')?.value;
+    const horaFin = document.getElementById('urgente-hora-fin')?.value;
+    if (!fecha) { alert('Selecciona una fecha.'); return; }
+
+    const btn = document.getElementById('btn-programar-urgente');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Guardando...';
+
+    const res = await DB.programarRetiroUrgente(retiro.id, new Date(fecha).toISOString(), horaInicio, horaFin);
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-calendar-check"></i> Confirmar fecha y notificar al cliente';
+
+    if (!res.ok) { alert('Error: ' + res.error); return; }
+    alert('Fecha asignada. El cliente la verá para aprobar o rechazar.');
+    App.navigate('admin');
+    Admin.tab('urgentes', document.querySelector('.admin-tab[data-tab="urgentes"]'));
+    await Admin._renderUrgentes();
   },
 });
 </script>
