@@ -1834,6 +1834,7 @@ const App = {
 
     // Scroll al tope
     window.scrollTo(0, 0);
+    document.getElementById('main-content').scrollTop = 0;
     App.renderTopbar();
     // Acciones específicas por pantalla
     if (screen === 'perfil' && App.state.usuario) Perfil.cargar();
