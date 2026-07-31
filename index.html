@@ -1448,7 +1448,7 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
 <!-- PESAJE DE MATERIALES (Admin) -->
 <section class="screen" id="scr-pesaje" data-screen="pesaje">
   <div class="screen-header">
-    <button class="btn-back" onclick="App.navigate('admin')"><i class="ti ti-arrow-left"></i></button>
+    <button class="btn-back" onclick="App.navigate(App.state.esOperador ? 'operador' : 'admin')"><i class="ti ti-arrow-left"></i></button>
     <h2>Ingresar pesaje</h2>
   </div>
   <div class="card">
@@ -1496,6 +1496,50 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
   </div>
   <button class="btn btn-primary btn-full" id="btn-programar-urgente" onclick="Admin.guardarProgramacionUrgente()">
     <i class="ti ti-calendar-check"></i> Confirmar fecha y notificar al cliente
+  </button>
+</section>
+      <!-- OPERADOR: ruta del día -->
+<section class="screen" id="scr-operador" data-screen="operador">
+  <div class="screen-header">
+    <div class="logo" style="flex:1">
+      <div class="logo-icon"><i class="ti ti-route"></i></div>
+      <span>Mi ruta de hoy</span>
+    </div>
+    <button class="btn-back" onclick="Auth.logout()" title="Cerrar sesión">
+      <i class="ti ti-logout"></i>
+    </button>
+  </div>
+  <p class="screen-sub">Clientes pendientes de retiro, con su dirección</p>
+  <div class="card" id="operador-lista-content">
+    <div class="empty-state">Cargando...</div>
+  </div>
+</section>
+      <!-- TICKET de retiro (operador) -->
+<section class="screen" id="scr-ticket" data-screen="ticket">
+  <div class="screen-header">
+    <h2>Ticket de retiro</h2>
+  </div>
+  <div class="card" style="text-align:center;padding:24px">
+    <i class="ti ti-circle-check" style="font-size:48px;color:#1D9E75;display:block;margin:0 auto 12px"></i>
+    <div style="font-weight:500;font-size:18px;margin-bottom:4px" id="ticket-cliente-nombre">—</div>
+    <div style="font-size:12px;color:#666" id="ticket-fecha">—</div>
+  </div>
+  <div class="card">
+    <div class="card-title"><i class="ti ti-recycle"></i> Materiales pesados</div>
+    <div id="ticket-materiales"></div>
+  </div>
+  <div class="card" style="background:var(--verde-light);text-align:center">
+    <div style="font-size:12px;color:var(--verde-text)">CONAREPESOS acreditados</div>
+    <div style="font-size:32px;font-weight:500;color:var(--verde-dark)" id="ticket-puntos">0</div>
+  </div>
+  <div id="ticket-email-status" style="font-size:12px;color:#666;text-align:center;margin-bottom:10px">
+    Enviando comprobante por correo...
+  </div>
+  <button class="btn btn-full" style="color:#0F6E56;border-color:#25D366;background:#DCF8C6;margin-bottom:8px" onclick="Operador.enviarWhatsapp()">
+    <i class="ti ti-brand-whatsapp"></i> Enviar también por WhatsApp
+  </button>
+  <button class="btn btn-primary btn-full" onclick="Operador.volver()">
+    <i class="ti ti-arrow-left"></i> Volver a mi ruta
   </button>
 </section>
     </main>
@@ -1726,7 +1770,7 @@ const DB = {
   async getSolicitudesConFotos() {
     const { data, error } = await supabase
       .from('retiros')
-      .select('*, usuarios(nombre, apellido)')
+      .select('*, usuarios(nombre, apellido, direccion, ciudad, telefono, email)')
       .eq('estado', 'aprobado')
       .not('foto_urls', 'is', null)
       .order('fotos_enviadas_at', { ascending: false });
@@ -1815,10 +1859,16 @@ const App = {
     App.state.planActual = CONFIG.PLANES[usuario.plan] || CONFIG.PLANES.basico;
     App.state.esAdmin = usuario.email === CONFIG.ADMIN_EMAIL;
 
+   App.state.esAdmin = usuario.email === CONFIG.ADMIN_EMAIL;
+    App.state.esOperador = !!usuario.es_operador;
+
     App.renderTopbar();
 
     if (App.state.esAdmin) {
       App.navigate('admin');
+    } else if (App.state.esOperador) {
+      App.navigate('operador');
+      await Operador.cargar();
     } else {
       App.navigate('home');
       await Dashboard.cargar();
@@ -3391,10 +3441,14 @@ Object.assign(Admin, {
 
     if (!res.ok) { alert('Error: ' + res.error); return; }
 
-    alert(`Pesaje guardado. Se acreditaron ${res.puntos} CONAREPESOS al cliente.`);
-    App.navigate('admin');
-    Admin.tab('pesaje', document.querySelector('.admin-tab[data-tab="pesaje"]'));
-    await Admin._renderPesaje();
+    if (App.state.esOperador) {
+      Operador.mostrarTicket(retiro, pesos, res);
+    } else {
+      alert(`Pesaje guardado. Se acreditaron ${res.puntos} CONAREPESOS al cliente.`);
+      App.navigate('admin');
+      Admin.tab('pesaje', document.querySelector('.admin-tab[data-tab="pesaje"]'));
+      await Admin._renderPesaje();
+    }
   },
 
   async _renderCanjes() {
@@ -3658,6 +3712,95 @@ Object.assign(Admin, {
     }
   },
 });
+  const Operador = {
+  _ticketActual: null,
+
+  async cargar() {
+    const retiros = await DB.getRetirosParaPesar();
+    const content = document.getElementById('operador-lista-content');
+    if (!content) return;
+    const pendientes = retiros.filter(r => !r.yaPesado);
+    if (!pendientes.length) {
+      content.innerHTML = '<div class="empty-state">No tienes retiros pendientes en tu ruta.</div>';
+      return;
+    }
+    content.innerHTML = pendientes.map(r => `
+      <div style="padding:10px 0;border-bottom:0.5px solid var(--border)">
+        <div style="font-weight:500;font-size:13px">${r.usuarios?.nombre} ${r.usuarios?.apellido}</div>
+        <div style="font-size:11px;color:#666"><i class="ti ti-map-pin"></i> ${r.usuarios?.direccion || '—'}, ${r.usuarios?.ciudad || '—'}</div>
+        <div style="font-size:11px;color:#666;margin-bottom:8px">${r.usuarios?.telefono ? '📞 ' + r.usuarios.telefono : 'Sin teléfono registrado'}</div>
+        <button class="btn btn-primary btn-full" style="font-size:13px" onclick='Admin.abrirPesaje(${JSON.stringify({ id: r.id, usuario_id: r.usuario_id, nombre: `${r.usuarios?.nombre || ''} ${r.usuarios?.apellido || ''}`, telefono: r.usuarios?.telefono || '', email: r.usuarios?.email || '' }).replace(/'/g, "&apos;")})'>
+          <i class="ti ti-scale"></i> Iniciar retiro
+        </button>
+      </div>`).join('');
+  },
+
+  mostrarTicket(retiro, pesos, res) {
+    Operador._ticketActual = { retiro, pesos, res };
+    const filas = Object.entries(pesos)
+      .filter(([, kg]) => kg > 0)
+      .map(([m, kg]) => `<div class="resumen-row"><span>${NOMBRES_MATERIAL[m] || m}</span><strong>${kg} kg</strong></div>`)
+      .join('');
+    document.getElementById('ticket-cliente-nombre').textContent = retiro.nombre || '—';
+    document.getElementById('ticket-fecha').textContent = new Date().toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' });
+    document.getElementById('ticket-materiales').innerHTML = filas || '<div class="empty-state">Sin materiales</div>';
+    document.getElementById('ticket-puntos').textContent = res.puntos;
+    App.navigate('ticket');
+    Operador.enviarEmail();
+  },
+
+  async enviarEmail() {
+    const t = Operador._ticketActual;
+    const statusEl = document.getElementById('ticket-email-status');
+    if (!t) return;
+    if (!t.retiro.email) {
+      if (statusEl) { statusEl.textContent = 'Cliente sin correo registrado — no se envió automáticamente.'; statusEl.style.color = '#791F1F'; }
+      return;
+    }
+    if (statusEl) { statusEl.textContent = 'Enviando comprobante por correo...'; statusEl.style.color = '#666'; }
+
+    const fecha = new Date().toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' });
+    const materiales = Object.entries(t.pesos)
+      .filter(([, kg]) => kg > 0)
+      .map(([m, kg]) => ({ nombre: NOMBRES_MATERIAL[m] || m, kg }));
+
+    try {
+      const resp = await fetch('/api/enviar-ticket', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: t.retiro.email, nombre: t.retiro.nombre, fecha, materiales, puntos: t.res.puntos }),
+      });
+      const data = await resp.json();
+      if (resp.ok && data.ok) {
+        if (statusEl) { statusEl.textContent = '✓ Comprobante enviado por correo'; statusEl.style.color = '#1D9E75'; }
+      } else {
+        if (statusEl) { statusEl.textContent = 'No se pudo enviar el correo automático.'; statusEl.style.color = '#791F1F'; }
+      }
+    } catch (err) {
+      if (statusEl) { statusEl.textContent = 'No se pudo enviar el correo automático.'; statusEl.style.color = '#791F1F'; }
+    }
+  },
+
+  enviarWhatsapp() {
+    const t = Operador._ticketActual;
+    if (!t) return;
+    const tel = (t.retiro.telefono || '').replace(/[^0-9]/g, '');
+    if (!tel) { alert('Este cliente no tiene teléfono registrado.'); return; }
+    const fecha = new Date().toLocaleDateString('es-CL', { day: 'numeric', month: 'long', year: 'numeric' });
+    const materiales = Object.entries(t.pesos)
+      .filter(([, kg]) => kg > 0)
+      .map(([m, kg]) => `• ${NOMBRES_MATERIAL[m] || m}: ${kg} kg`)
+      .join('\n');
+    const texto = `Hola ${t.retiro.nombre}! Aquí tu comprobante de retiro CONARE HOGAR del ${fecha}:\n\n${materiales}\n\nCONAREPESOS acreditados: ${t.res.puntos}\n\n¡Gracias por reciclar con nosotros! ♻️`;
+    const url = `https://wa.me/${tel}?text=${encodeURIComponent(texto)}`;
+    window.open(url, '_blank');
+  },
+
+  async volver() {
+    App.navigate('operador');
+    await Operador.cargar();
+  },
+};
 </script>
 </body>
 </html>
