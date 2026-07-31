@@ -1423,6 +1423,21 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
   <button class="btn btn-primary btn-full" id="btn-guardar-config" onclick="Admin.guardarConfigConarepesos()">
     <i class="ti ti-device-floppy"></i> Guardar configuración
   </button>
+  <div class="card">
+  <div class="card-title"><i class="ti ti-user-plus"></i> Operadores (choferes / peonetas)</div>
+  <div class="row-2">
+    <div class="form-group"><label>Nombre</label><input type="text" id="op-nombre" placeholder="Juan"></div>
+    <div class="form-group"><label>Apellido</label><input type="text" id="op-apellido" placeholder="Pérez"></div>
+  </div>
+  <div class="form-group"><label>Correo</label><input type="email" id="op-email" placeholder="juan@conarehogar.cl"></div>
+  <div class="form-group"><label>Contraseña</label><input type="password" id="op-password" placeholder="Mínimo 8 caracteres"></div>
+  <div id="op-error" class="alert alert-error" style="display:none"></div>
+  <button class="btn btn-primary btn-full" id="btn-crear-operador" onclick="Admin.crearOperador()">
+    <i class="ti ti-user-plus"></i> Crear operador
+  </button>
+  <div class="divider"></div>
+  <div id="operadores-lista"><div class="empty-state">Cargando...</div></div>
+</div>
 </div>
         <div id="admin-panel-urgentes" class="admin-panel">
   <div class="card" id="admin-urgentes-content">
@@ -2832,6 +2847,7 @@ const Admin = {
     await Admin._renderCanjes();
     await Admin._renderConfig();
     await Admin._renderUrgentes();
+    await Admin._renderOperadores();
   },
 
   _renderClientes(clientes) {
@@ -3569,6 +3585,77 @@ Object.assign(Admin, {
     App.navigate('admin');
     Admin.tab('urgentes', document.querySelector('.admin-tab[data-tab="urgentes"]'));
     await Admin._renderUrgentes();
+  },
+});
+  Object.assign(DB, {
+  async getOperadores() {
+    const { data } = await supabase.from('usuarios').select('*').eq('es_operador', true).order('created_at', { ascending: false });
+    return data || [];
+  },
+});
+
+Object.assign(Admin, {
+  async _renderOperadores() {
+    const ops = await DB.getOperadores();
+    const lista = document.getElementById('operadores-lista');
+    if (!lista) return;
+    if (!ops.length) { lista.innerHTML = '<div class="empty-state">Aún no hay operadores creados.</div>'; return; }
+    lista.innerHTML = ops.map(o => `
+      <div class="client-row">
+        <div class="client-avatar">${(o.nombre?.charAt(0) || '')}${(o.apellido?.charAt(0) || '')}</div>
+        <div class="client-info">
+          <div class="client-name">${o.nombre} ${o.apellido}</div>
+          <div class="client-sub">${o.email}</div>
+        </div>
+      </div>`).join('');
+  },
+
+  async crearOperador() {
+    const nombre = document.getElementById('op-nombre')?.value.trim();
+    const apellido = document.getElementById('op-apellido')?.value.trim();
+    const email = document.getElementById('op-email')?.value.trim();
+    const password = document.getElementById('op-password')?.value;
+    const errEl = document.getElementById('op-error');
+    if (errEl) errEl.style.display = 'none';
+
+    if (!nombre || !apellido || !email || !password) {
+      if (errEl) { errEl.textContent = 'Completa todos los campos.'; errEl.style.display = 'flex'; }
+      return;
+    }
+
+    const btn = document.getElementById('btn-crear-operador');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Creando...';
+
+    const { data: { session } } = await supabase.auth.getSession();
+
+    try {
+      const resp = await fetch('/api/crear-operador', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ nombre, apellido, email, password }),
+      });
+      const data = await resp.json();
+
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-user-plus"></i> Crear operador';
+
+      if (!resp.ok) {
+        if (errEl) { errEl.textContent = data.error || 'Error al crear el operador.'; errEl.style.display = 'flex'; }
+        return;
+      }
+
+      document.getElementById('op-nombre').value = '';
+      document.getElementById('op-apellido').value = '';
+      document.getElementById('op-email').value = '';
+      document.getElementById('op-password').value = '';
+      alert(`Operador ${nombre} ${apellido} creado. Ya puede iniciar sesión con su correo y contraseña.`);
+      await Admin._renderOperadores();
+    } catch (err) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-user-plus"></i> Crear operador';
+      if (errEl) { errEl.textContent = 'Error: ' + err.message; errEl.style.display = 'flex'; }
+    }
   },
 });
 </script>
