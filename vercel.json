@@ -19,5 +19,8 @@
         { "key": "Service-Worker-Allowed", "value": "/" }
       ]
     }
+  ],
+  "crons": [
+    { "path": "/api/keep-alive", "schedule": "0 12 * * *" }
   ]
 }
