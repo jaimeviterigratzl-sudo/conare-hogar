@@ -1860,17 +1860,17 @@ const App = {
 
     // Escucha cambios de sesión (login/logout)
     supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === 'PASSWORD_RECOVERY') {
+     if (event === 'PASSWORD_RECOVERY') {
         App.navigate('nueva-password');
         return;
       }
+      if (App._loginOperadorInProgress) return;
       if (session?.user) {
         await App.cargarUsuario(session.user.id);
       } else {
         App.state.usuario = null;
         App.navigate('welcome');
-      }
-    });
+      }    });
 
     // Verifica si ya hay sesión activa
     const { data: { session } } = await supabase.auth.getSession();
@@ -3851,10 +3851,12 @@ Object.assign(Admin, {
 
     btn.disabled = true;
     btn.innerHTML = '<div class="spinner"></div> Entrando...';
+    App._loginOperadorInProgress = true;
 
     const { data, error } = await supabase.auth.signInWithPassword({ email, password });
 
     if (error) {
+      App._loginOperadorInProgress = false;
       btn.disabled = false;
       btn.innerHTML = '<i class="ti ti-login"></i> Entrar';
       const msg = error.message.includes('Invalid') ? 'Correo o contraseña incorrectos.' : error.message;
@@ -3865,12 +3867,15 @@ Object.assign(Admin, {
     const usuario = await DB.getUsuario(data.user.id);
     if (!usuario || !usuario.es_operador) {
       await supabase.auth.signOut();
+      App._loginOperadorInProgress = false;
       btn.disabled = false;
       btn.innerHTML = '<i class="ti ti-login"></i> Entrar';
-      App.showAlert('login-operador-error', 'Esta cuenta no tiene acceso de operador.');
+      App.showAlert('login-operador-error', 'Esta cuenta no tiene acceso de operador. Si eres cliente, usa "Ya tengo cuenta" en la pantalla de inicio.');
       return;
     }
-    // La navegación ocurre automáticamente vía onAuthStateChange en App.init()
+
+    App._loginOperadorInProgress = false;
+    await App.cargarUsuario(data.user.id);
   },
 });
 </script>
