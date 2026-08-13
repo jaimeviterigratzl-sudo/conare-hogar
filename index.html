@@ -1696,6 +1696,31 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
         </select>
       </div>
     </div>
+    <div class="divider"></div>
+<div class="form-group">
+  <label>Nueva contraseña (opcional)</label>
+  <div class="password-wrap">
+    <input type="password" id="ec-password" placeholder="Déjalo en blanco para no cambiarla" oninput="checkPasswordStrengthOperador(this.value, 'ec')">
+    <button type="button" class="password-toggle" onclick="togglePassword('ec-password', this)" tabindex="-1" aria-label="Mostrar contraseña">
+      <i class="ti ti-eye"></i>
+    </button>
+  </div>
+  <div class="password-strength" id="ec-password-strength" style="display:none">
+    <div class="strength-bar"><div class="strength-fill" id="ec-strength-fill"></div></div>
+    <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+      <span class="strength-text" id="ec-strength-text"></span>
+    </div>
+    <div class="strength-reqs">
+      <div class="strength-req unmet" id="ec-req-length"><i class="ti ti-circle"></i> Mínimo 8 caracteres</div>
+      <div class="strength-req unmet" id="ec-req-upper"><i class="ti ti-circle"></i> Al menos una letra mayúscula</div>
+      <div class="strength-req unmet" id="ec-req-number"><i class="ti ti-circle"></i> Al menos un número</div>
+      <div class="strength-req unmet" id="ec-req-special"><i class="ti ti-circle"></i> Al menos un símbolo (!@#$%...)</div>
+    </div>
+  </div>
+</div>
+<div style="font-size:11px;color:#888;margin-top:-6px;margin-bottom:12px">
+  Por seguridad, no se puede ver la contraseña actual — solo reemplazarla por una nueva si es necesario.
+</div>
     <div id="ec-error" class="alert alert-error" style="display:none"></div>
     <button class="btn btn-primary btn-full" id="btn-guardar-cliente" onclick="Admin.guardarEdicionCliente()">
       <i class="ti ti-device-floppy"></i> Guardar cambios
@@ -4071,6 +4096,9 @@ Object.assign(Admin, {
     document.getElementById('ec-direccion').value = cliente.direccion || '';
     document.getElementById('ec-ciudad').value = cliente.ciudad || '';
     document.getElementById('ec-plan').value = cliente.plan || 'basico';
+    document.getElementById('ec-password').value = '';
+    const box = document.getElementById('ec-password-strength');
+    if (box) box.style.display = 'none';
     App.navigate('editar-cliente');
   },
 
@@ -4083,17 +4111,52 @@ Object.assign(Admin, {
     const direccion = document.getElementById('ec-direccion')?.value.trim();
     const ciudad = document.getElementById('ec-ciudad')?.value.trim();
     const plan = document.getElementById('ec-plan')?.value;
+    const password = document.getElementById('ec-password')?.value;
+    const errEl = document.getElementById('ec-error');
+    if (errEl) errEl.style.display = 'none';
+
+    if (password && password.length < 8) {
+      if (errEl) { errEl.textContent = 'La nueva contraseña debe tener al menos 8 caracteres.'; errEl.style.display = 'flex'; }
+      return;
+    }
 
     const btn = document.getElementById('btn-guardar-cliente');
     btn.disabled = true;
     btn.innerHTML = '<div class="spinner"></div> Guardando...';
 
     const { error } = await supabase.from('usuarios').update({ nombre, apellido, telefono, direccion, ciudad, plan }).eq('id', c.id);
+    if (error) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-device-floppy"></i> Guardar cambios';
+      if (errEl) { errEl.textContent = 'Error: ' + error.message; errEl.style.display = 'flex'; }
+      return;
+    }
+
+    if (password) {
+      const { data: { session } } = await supabase.auth.getSession();
+      try {
+        const resp = await fetch('/api/resetear-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+          body: JSON.stringify({ userId: c.id, password }),
+        });
+        const data = await resp.json();
+        if (!resp.ok) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="ti ti-device-floppy"></i> Guardar cambios';
+          if (errEl) { errEl.textContent = 'Datos guardados, pero la contraseña no se pudo cambiar: ' + (data.error || ''); errEl.style.display = 'flex'; }
+          return;
+        }
+      } catch (err) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ti ti-device-floppy"></i> Guardar cambios';
+        if (errEl) { errEl.textContent = 'Datos guardados, pero la contraseña no se pudo cambiar: ' + err.message; errEl.style.display = 'flex'; }
+        return;
+      }
+    }
 
     btn.disabled = false;
     btn.innerHTML = '<i class="ti ti-device-floppy"></i> Guardar cambios';
-
-    if (error) { alert('Error: ' + error.message); return; }
     alert('Cliente actualizado correctamente.');
     App.navigate('admin');
     const clientes = await DB.getTodosLosClientes();
