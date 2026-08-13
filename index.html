@@ -1597,7 +1597,24 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
     <div class="divider"></div>
     <div class="form-group">
       <label>Nueva contraseña (opcional)</label>
-      <input type="password" id="eo-password" placeholder="Déjalo en blanco para no cambiarla">
+      <div class="password-wrap">
+        <input type="password" id="eo-password" placeholder="Déjalo en blanco para no cambiarla" oninput="checkPasswordStrengthOperador(this.value)">
+        <button type="button" class="password-toggle" onclick="togglePassword('eo-password', this)" tabindex="-1" aria-label="Mostrar contraseña">
+          <i class="ti ti-eye"></i>
+        </button>
+      </div>
+      <div class="password-strength" id="eo-password-strength" style="display:none">
+        <div class="strength-bar"><div class="strength-fill" id="eo-strength-fill"></div></div>
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:6px">
+          <span class="strength-text" id="eo-strength-text"></span>
+        </div>
+        <div class="strength-reqs">
+          <div class="strength-req unmet" id="eo-req-length"><i class="ti ti-circle"></i> Mínimo 8 caracteres</div>
+          <div class="strength-req unmet" id="eo-req-upper"><i class="ti ti-circle"></i> Al menos una letra mayúscula</div>
+          <div class="strength-req unmet" id="eo-req-number"><i class="ti ti-circle"></i> Al menos un número</div>
+          <div class="strength-req unmet" id="eo-req-special"><i class="ti ti-circle"></i> Al menos un símbolo (!@#$%...)</div>
+        </div>
+      </div>
     </div>
     <div style="font-size:11px;color:#888;margin-top:-6px;margin-bottom:12px">
       Por seguridad, no se puede ver la contraseña actual — solo reemplazarla por una nueva si es necesario.
@@ -3221,6 +3238,45 @@ function togglePassword(inputId, btn) {
   }
 }
 
+  function checkPasswordStrengthOperador(pw) {
+  const box = document.getElementById('eo-password-strength');
+  const fill = document.getElementById('eo-strength-fill');
+  const text = document.getElementById('eo-strength-text');
+  if (!fill || !text || !box) return;
+
+  if (pw.length === 0) { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+
+  const reqs = {
+    length: pw.length >= 8,
+    upper: /[A-Z]/.test(pw),
+    number: /[0-9]/.test(pw),
+    special: /[^A-Za-z0-9]/.test(pw),
+  };
+
+  Object.entries(reqs).forEach(([key, met]) => {
+    const el = document.getElementById('eo-req-' + key);
+    if (!el) return;
+    el.className = 'strength-req ' + (met ? 'met' : 'unmet');
+    el.querySelector('i').className = met ? 'ti ti-circle-check' : 'ti ti-circle';
+  });
+
+  const score = Object.values(reqs).filter(Boolean).length;
+  const levels = [
+    { color: '#E24B4A', msg: 'Muy débil' },
+    { color: '#F59E42', msg: 'Débil' },
+    { color: '#F5C842', msg: 'Regular' },
+    { color: '#5DCAA5', msg: 'Fuerte' },
+    { color: '#1D9E75', msg: 'Muy fuerte 🔒' },
+  ];
+  const level = levels[Math.min(score, 4)];
+
+  fill.style.width = (score * 25) + '%';
+  fill.style.background = level.color;
+  text.textContent = level.msg;
+  text.style.color = level.color;
+  text.style.fontWeight = '500';
+}
 function checkPasswordStrength(pw) {
   const fill = document.getElementById('strength-fill');
   const text = document.getElementById('strength-text');
@@ -3999,9 +4055,10 @@ Object.assign(Admin, {
     document.getElementById('eo-nombre').value = operador.nombre || '';
     document.getElementById('eo-apellido').value = operador.apellido || '';
     document.getElementById('eo-password').value = '';
+    const box = document.getElementById('eo-password-strength');
+    if (box) box.style.display = 'none';
     App.navigate('editar-operador');
   },
-
   async guardarEdicionOperador() {
     const o = Admin._operadorEditando;
     if (!o) return;
