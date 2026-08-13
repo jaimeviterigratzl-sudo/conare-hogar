@@ -389,6 +389,14 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
         </div>
 
         <div style="text-align:center;margin-top:16px">
+          <div class="option-card secondary" onclick="App.navigate('login-operador')" style="margin-bottom:10px">
+  <div class="option-icon outline"><i class="ti ti-route" style="color:var(--verde)"></i></div>
+  <div>
+    <div class="option-title" style="color:#1a1a1a">Acceso Operadores</div>
+    <div class="option-sub dark">Choferes y peonetas — ingresa aquí</div>
+  </div>
+  <i class="ti ti-arrow-right" style="margin-left:auto;color:#888"></i>
+</div>
           <button class="btn-link" onclick="App.navigate('login')">Ya tengo cuenta → Iniciar sesión</button>
         </div>
         <p class="welcome-legal">Al registrarte aceptas nuestros <a href="#">Términos de servicio</a> y <a href="#">Política de privacidad</a>.</p>
@@ -640,7 +648,36 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
           <i class="ti ti-gift"></i> Empezar con retiro gratis
         </button>
       </section>
-
+<!-- ACCESO OPERADORES -->
+<section class="screen" id="scr-login-operador" data-screen="login-operador">
+  <div class="screen-header">
+    <button class="btn-back" onclick="App.navigate('welcome')"><i class="ti ti-arrow-left"></i></button>
+    <h2>Acceso Operadores</h2>
+  </div>
+  <div class="form-card">
+    <div class="info-box" style="margin-bottom:14px">
+      <i class="ti ti-route"></i>
+      <div>Acceso exclusivo para choferes y peonetas de CONARE HOGAR.</div>
+    </div>
+    <div class="form-group">
+      <label>Correo electrónico</label>
+      <input type="email" id="login-operador-email" placeholder="tu@correo.com" autocomplete="email">
+    </div>
+    <div class="form-group">
+      <label>Contraseña</label>
+      <div class="password-wrap">
+        <input type="password" id="login-operador-password" placeholder="••••••••" autocomplete="current-password">
+        <button type="button" class="password-toggle" onclick="togglePassword('login-operador-password', this)" tabindex="-1" aria-label="Mostrar contraseña">
+          <i class="ti ti-eye"></i>
+        </button>
+      </div>
+    </div>
+    <div id="login-operador-error" class="alert alert-error" style="display:none"></div>
+    <button class="btn btn-primary btn-full" id="login-operador-btn" onclick="Auth.loginOperador()">
+      <i class="ti ti-login"></i> Entrar
+    </button>
+  </div>
+</section>
       <!-- ② RECUPERAR CONTRASEÑA -->
       <section class="screen" id="scr-recuperar" data-screen="recuperar">
         <div class="screen-header">
@@ -3801,6 +3838,41 @@ Object.assign(Admin, {
     await Operador.cargar();
   },
 };
+  Object.assign(Auth, {
+  async loginOperador() {
+    const email = document.getElementById('login-operador-email')?.value?.trim();
+    const password = document.getElementById('login-operador-password')?.value;
+    const btn = document.getElementById('login-operador-btn');
+
+    if (!email || !password) {
+      App.showAlert('login-operador-error', 'Por favor ingresa tu correo y contraseña.');
+      return;
+    }
+
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Entrando...';
+
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+
+    if (error) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-login"></i> Entrar';
+      const msg = error.message.includes('Invalid') ? 'Correo o contraseña incorrectos.' : error.message;
+      App.showAlert('login-operador-error', msg);
+      return;
+    }
+
+    const usuario = await DB.getUsuario(data.user.id);
+    if (!usuario || !usuario.es_operador) {
+      await supabase.auth.signOut();
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-login"></i> Entrar';
+      App.showAlert('login-operador-error', 'Esta cuenta no tiene acceso de operador.');
+      return;
+    }
+    // La navegación ocurre automáticamente vía onAuthStateChange en App.init()
+  },
+});
 </script>
 </body>
 </html>
