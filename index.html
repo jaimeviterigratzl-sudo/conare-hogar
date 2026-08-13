@@ -1579,6 +1579,36 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
     <i class="ti ti-arrow-left"></i> Volver a mi ruta
   </button>
 </section>
+      <!-- EDITAR CLIENTE (Admin) -->
+<section class="screen" id="scr-editar-cliente" data-screen="editar-cliente">
+  <div class="screen-header">
+    <button class="btn-back" onclick="App.navigate('admin')"><i class="ti ti-arrow-left"></i></button>
+    <h2>Editar cliente</h2>
+  </div>
+  <div class="form-card">
+    <div class="row-2">
+      <div class="form-group"><label>Nombre</label><input type="text" id="ec-nombre"></div>
+      <div class="form-group"><label>Apellido</label><input type="text" id="ec-apellido"></div>
+    </div>
+    <div class="form-group"><label>Teléfono</label><input type="tel" id="ec-telefono"></div>
+    <div class="form-group"><label>Dirección</label><input type="text" id="ec-direccion"></div>
+    <div class="row-2">
+      <div class="form-group"><label>Ciudad</label><input type="text" id="ec-ciudad"></div>
+      <div class="form-group">
+        <label>Plan</label>
+        <select id="ec-plan">
+          <option value="basico">Básico</option>
+          <option value="estandar">Estándar</option>
+          <option value="premium">Premium</option>
+        </select>
+      </div>
+    </div>
+    <div id="ec-error" class="alert alert-error" style="display:none"></div>
+    <button class="btn btn-primary btn-full" id="btn-guardar-cliente" onclick="Admin.guardarEdicionCliente()">
+      <i class="ti ti-device-floppy"></i> Guardar cambios
+    </button>
+  </div>
+</section>
     </main>
 
     <!-- NAVEGACIÓN INFERIOR (solo para usuarios logueados) -->
@@ -1890,6 +1920,12 @@ const App = {
     if (!usuario) {
       // Usuario autenticado pero sin perfil → va a completar registro
       App.navigate('registro');
+      return;
+    }
+    if (usuario.activo === false && usuario.email !== CONFIG.ADMIN_EMAIL) {
+      await supabase.auth.signOut();
+      alert('Esta cuenta está desactivada. Contacta al administrador.');
+      App.navigate('welcome');
       return;
     }
     App.state.usuario = usuario;
@@ -2946,18 +2982,22 @@ const Admin = {
     lista.innerHTML = clientes.map(c => {
       const plan = CONFIG.PLANES[c.plan] || CONFIG.PLANES.basico;
       const initials = `${c.nombre?.charAt(0) || '?'}${c.apellido?.charAt(0) || ''}`.toUpperCase();
+      const clienteData = JSON.stringify({ id: c.id, nombre: c.nombre, apellido: c.apellido, telefono: c.telefono, direccion: c.direccion, ciudad: c.ciudad, plan: c.plan }).replace(/'/g, "&apos;");
       return `
-        <div class="client-row">
+        <div class="client-row" style="flex-wrap:wrap">
           <div class="client-avatar">${initials}</div>
           <div class="client-info">
-            <div class="client-name">${c.nombre} ${c.apellido}</div>
+            <div class="client-name">${c.nombre} ${c.apellido} ${c.activo === false ? '<span class="badge badge-gray">Inactivo</span>' : ''}</div>
             <div class="client-sub">${c.ciudad || '—'} · ${c.direccion || '—'}</div>
           </div>
           <span class="badge ${plan.badge}">${plan.nombre}</span>
+          <div style="display:flex;gap:6px;width:100%;margin-top:8px">
+            <button class="btn flex-1" style="font-size:11px;padding:6px" onclick='Admin.abrirEditarCliente(${clienteData})'><i class="ti ti-edit"></i> Editar</button>
+            <button class="btn flex-1" style="font-size:11px;padding:6px" onclick="Admin.toggleActivoUsuario('${c.id}', ${c.activo !== false})"><i class="ti ti-power"></i> ${c.activo === false ? 'Activar' : 'Desactivar'}</button>
+          </div>
         </div>`;
     }).join('');
   },
-
   async _renderRutas() {
     const retiros = await DB.getRutasSemana();
     const content = document.getElementById('admin-rutas-content');
@@ -3692,11 +3732,16 @@ Object.assign(Admin, {
     if (!lista) return;
     if (!ops.length) { lista.innerHTML = '<div class="empty-state">Aún no hay operadores creados.</div>'; return; }
     lista.innerHTML = ops.map(o => `
-      <div class="client-row">
+      <div class="client-row" style="flex-wrap:wrap">
         <div class="client-avatar">${(o.nombre?.charAt(0) || '')}${(o.apellido?.charAt(0) || '')}</div>
         <div class="client-info">
-          <div class="client-name">${o.nombre} ${o.apellido}</div>
+          <div class="client-name">${o.nombre} ${o.apellido} ${o.activo === false ? '<span class="badge badge-gray">Inactivo</span>' : ''}</div>
           <div class="client-sub">${o.email}</div>
+        </div>
+        <div style="display:flex;gap:6px;width:100%;margin-top:8px">
+          <button class="btn flex-1" style="font-size:11px;padding:6px" onclick="Admin.editarOperador('${o.id}', '${(o.nombre || '').replace(/'/g, "\\'")}', '${(o.apellido || '').replace(/'/g, "\\'")}')"><i class="ti ti-edit"></i> Editar</button>
+          <button class="btn flex-1" style="font-size:11px;padding:6px" onclick="Admin.resetearPasswordOperador('${o.id}')"><i class="ti ti-key"></i> Clave</button>
+          <button class="btn flex-1" style="font-size:11px;padding:6px" onclick="Admin.toggleActivoUsuario('${o.id}', ${o.activo !== false})"><i class="ti ti-power"></i> ${o.activo === false ? 'Activar' : 'Desactivar'}</button>
         </div>
       </div>`).join('');
   },
@@ -3876,6 +3921,86 @@ Object.assign(Admin, {
 
     App._loginOperadorInProgress = false;
     await App.cargarUsuario(data.user.id);
+  },
+});
+  Object.assign(Admin, {
+  _clienteEditando: null,
+
+  abrirEditarCliente(cliente) {
+    Admin._clienteEditando = cliente;
+    document.getElementById('ec-nombre').value = cliente.nombre || '';
+    document.getElementById('ec-apellido').value = cliente.apellido || '';
+    document.getElementById('ec-telefono').value = cliente.telefono || '';
+    document.getElementById('ec-direccion').value = cliente.direccion || '';
+    document.getElementById('ec-ciudad').value = cliente.ciudad || '';
+    document.getElementById('ec-plan').value = cliente.plan || 'basico';
+    App.navigate('editar-cliente');
+  },
+
+  async guardarEdicionCliente() {
+    const c = Admin._clienteEditando;
+    if (!c) return;
+    const nombre = document.getElementById('ec-nombre')?.value.trim();
+    const apellido = document.getElementById('ec-apellido')?.value.trim();
+    const telefono = document.getElementById('ec-telefono')?.value.trim();
+    const direccion = document.getElementById('ec-direccion')?.value.trim();
+    const ciudad = document.getElementById('ec-ciudad')?.value.trim();
+    const plan = document.getElementById('ec-plan')?.value;
+
+    const btn = document.getElementById('btn-guardar-cliente');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Guardando...';
+
+    const { error } = await supabase.from('usuarios').update({ nombre, apellido, telefono, direccion, ciudad, plan }).eq('id', c.id);
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-device-floppy"></i> Guardar cambios';
+
+    if (error) { alert('Error: ' + error.message); return; }
+    alert('Cliente actualizado correctamente.');
+    App.navigate('admin');
+    const clientes = await DB.getTodosLosClientes();
+    Admin._renderClientes(clientes);
+  },
+
+  async editarOperador(id, nombreActual, apellidoActual) {
+    const nombre = prompt('Nombre:', nombreActual);
+    if (nombre === null) return;
+    const apellido = prompt('Apellido:', apellidoActual);
+    if (apellido === null) return;
+    const { error } = await supabase.from('usuarios').update({ nombre, apellido }).eq('id', id);
+    if (error) { alert('Error: ' + error.message); return; }
+    await Admin._renderOperadores();
+  },
+
+  async resetearPasswordOperador(userId) {
+    const password = prompt('Ingresa la nueva contraseña (mínimo 8 caracteres):');
+    if (!password) return;
+    if (password.length < 8) { alert('La contraseña debe tener al menos 8 caracteres.'); return; }
+
+    const { data: { session } } = await supabase.auth.getSession();
+    try {
+      const resp = await fetch('/api/resetear-password', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+        body: JSON.stringify({ userId, password }),
+      });
+      const data = await resp.json();
+      if (!resp.ok) { alert('Error: ' + (data.error || 'No se pudo restablecer.')); return; }
+      alert('Contraseña actualizada correctamente.');
+    } catch (err) {
+      alert('Error: ' + err.message);
+    }
+  },
+
+  async toggleActivoUsuario(id, estaActivo) {
+    const nuevoEstado = !estaActivo;
+    if (!confirm(nuevoEstado ? '¿Reactivar esta cuenta?' : '¿Desactivar esta cuenta? No podrá iniciar sesión hasta que la reactives.')) return;
+    const { error } = await supabase.from('usuarios').update({ activo: nuevoEstado }).eq('id', id);
+    if (error) { alert('Error: ' + error.message); return; }
+    await Admin._renderOperadores();
+    const clientes = await DB.getTodosLosClientes();
+    Admin._renderClientes(clientes);
   },
 });
 </script>
