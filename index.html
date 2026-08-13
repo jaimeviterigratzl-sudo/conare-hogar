@@ -1583,6 +1583,31 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
     <i class="ti ti-arrow-left"></i> Volver a mi ruta
   </button>
 </section>
+      <!-- EDITAR OPERADOR (Admin) -->
+<section class="screen" id="scr-editar-operador" data-screen="editar-operador">
+  <div class="screen-header">
+    <button class="btn-back" onclick="App.navigate('admin')"><i class="ti ti-arrow-left"></i></button>
+    <h2>Editar operador</h2>
+  </div>
+  <div class="form-card">
+    <div class="row-2">
+      <div class="form-group"><label>Nombre</label><input type="text" id="eo-nombre"></div>
+      <div class="form-group"><label>Apellido</label><input type="text" id="eo-apellido"></div>
+    </div>
+    <div class="divider"></div>
+    <div class="form-group">
+      <label>Nueva contraseña (opcional)</label>
+      <input type="password" id="eo-password" placeholder="Déjalo en blanco para no cambiarla">
+    </div>
+    <div style="font-size:11px;color:#888;margin-top:-6px;margin-bottom:12px">
+      Por seguridad, no se puede ver la contraseña actual — solo reemplazarla por una nueva si es necesario.
+    </div>
+    <div id="eo-error" class="alert alert-error" style="display:none"></div>
+    <button class="btn btn-primary btn-full" id="btn-guardar-operador" onclick="Admin.guardarEdicionOperador()">
+      <i class="ti ti-device-floppy"></i> Guardar cambios
+    </button>
+  </div>
+</section>
       <!-- EDITAR CLIENTE (Admin) -->
 <section class="screen" id="scr-editar-cliente" data-screen="editar-cliente">
   <div class="screen-header">
@@ -3743,7 +3768,7 @@ Object.assign(Admin, {
           <div class="client-sub">${o.email}</div>
         </div>
         <div style="display:flex;gap:6px;width:100%;margin-top:8px">
-          <button class="btn flex-1" style="font-size:11px;padding:6px" onclick="Admin.editarOperador('${o.id}', '${(o.nombre || '').replace(/'/g, "\\'")}', '${(o.apellido || '').replace(/'/g, "\\'")}')"><i class="ti ti-edit"></i> Editar</button>
+          <button class="btn flex-1" style="font-size:11px;padding:6px" onclick='Admin.abrirEditarOperador(${JSON.stringify({ id: o.id, nombre: o.nombre, apellido: o.apellido }).replace(/'/g, "&apos;")})'><i class="ti ti-edit"></i> Editar</button>
           <button class="btn flex-1" style="font-size:11px;padding:6px" onclick="Admin.resetearPasswordOperador('${o.id}')"><i class="ti ti-key"></i> Clave</button>
           <button class="btn flex-1" style="font-size:11px;padding:6px" onclick="Admin.toggleActivoUsuario('${o.id}', ${o.activo !== false})"><i class="ti ti-power"></i> ${o.activo === false ? 'Activar' : 'Desactivar'}</button>
         </div>
@@ -3967,16 +3992,71 @@ Object.assign(Admin, {
     Admin._renderClientes(clientes);
   },
 
-  async editarOperador(id, nombreActual, apellidoActual) {
-    const nombre = prompt('Nombre:', nombreActual);
-    if (nombre === null) return;
-    const apellido = prompt('Apellido:', apellidoActual);
-    if (apellido === null) return;
-    const { error } = await supabase.from('usuarios').update({ nombre, apellido }).eq('id', id);
-    if (error) { alert('Error: ' + error.message); return; }
-    await Admin._renderOperadores();
+  _operadorEditando: null,
+
+  abrirEditarOperador(operador) {
+    Admin._operadorEditando = operador;
+    document.getElementById('eo-nombre').value = operador.nombre || '';
+    document.getElementById('eo-apellido').value = operador.apellido || '';
+    document.getElementById('eo-password').value = '';
+    App.navigate('editar-operador');
   },
 
+  async guardarEdicionOperador() {
+    const o = Admin._operadorEditando;
+    if (!o) return;
+    const nombre = document.getElementById('eo-nombre')?.value.trim();
+    const apellido = document.getElementById('eo-apellido')?.value.trim();
+    const password = document.getElementById('eo-password')?.value;
+    const errEl = document.getElementById('eo-error');
+    if (errEl) errEl.style.display = 'none';
+
+    if (password && password.length < 8) {
+      if (errEl) { errEl.textContent = 'La nueva contraseña debe tener al menos 8 caracteres.'; errEl.style.display = 'flex'; }
+      return;
+    }
+
+    const btn = document.getElementById('btn-guardar-operador');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Guardando...';
+
+    const { error } = await supabase.from('usuarios').update({ nombre, apellido }).eq('id', o.id);
+    if (error) {
+      btn.disabled = false;
+      btn.innerHTML = '<i class="ti ti-device-floppy"></i> Guardar cambios';
+      if (errEl) { errEl.textContent = 'Error: ' + error.message; errEl.style.display = 'flex'; }
+      return;
+    }
+
+    if (password) {
+      const { data: { session } } = await supabase.auth.getSession();
+      try {
+        const resp = await fetch('/api/resetear-password', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${session.access_token}` },
+          body: JSON.stringify({ userId: o.id, password }),
+        });
+        const data = await resp.json();
+        if (!resp.ok) {
+          btn.disabled = false;
+          btn.innerHTML = '<i class="ti ti-device-floppy"></i> Guardar cambios';
+          if (errEl) { errEl.textContent = 'Nombre guardado, pero la contraseña no se pudo cambiar: ' + (data.error || ''); errEl.style.display = 'flex'; }
+          return;
+        }
+      } catch (err) {
+        btn.disabled = false;
+        btn.innerHTML = '<i class="ti ti-device-floppy"></i> Guardar cambios';
+        if (errEl) { errEl.textContent = 'Nombre guardado, pero la contraseña no se pudo cambiar: ' + err.message; errEl.style.display = 'flex'; }
+        return;
+      }
+    }
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-device-floppy"></i> Guardar cambios';
+    alert('Operador actualizado correctamente.');
+    App.navigate('admin');
+    await Admin._renderOperadores();
+  },
   async resetearPasswordOperador(userId) {
     const password = prompt('Ingresa la nueva contraseña (mínimo 8 caracteres):');
     if (!password) return;
