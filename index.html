@@ -1410,13 +1410,21 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
           </div>
         </div>
         <div id="admin-panel-rutas" class="admin-panel">
-          <div class="card" id="admin-rutas-content">
-            <!-- Se llena dinámicamente -->
-          </div>
-          <button class="btn btn-primary btn-full" onclick="Admin.notificarTodos()">
-            <i class="ti ti-send"></i> Notificar a todos los clientes
-          </button>
-        </div>
+  <div class="card">
+    <div class="card-title"><i class="ti ti-list-check"></i> Retiros de hoy</div>
+    <div class="card-sub">Elige cuáles incluir en la optimización automática. Los que dejes sin marcar quedan para asignar manualmente en "Solicitudes".</div>
+    <div id="rutas-checklist"><div class="empty-state">Cargando...</div></div>
+    <button class="btn btn-primary btn-full" id="btn-optimizar-rutas" onclick="Admin.optimizarRutas()" style="margin-top:10px">
+      <i class="ti ti-route"></i> Optimizar seleccionados
+    </button>
+  </div>
+  <div class="card" id="admin-rutas-content">
+    <!-- Resultado de la última optimización -->
+  </div>
+  <button class="btn btn-primary btn-full" onclick="Admin.notificarTodos()">
+    <i class="ti ti-send"></i> Notificar a todos los clientes
+  </button>
+</div>
         <div id="admin-panel-ingresos" class="admin-panel">
           <div class="card" id="admin-ingresos-content">
             <!-- Se llena dinámicamente desde Supabase + Flow -->
@@ -1461,6 +1469,25 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
   <button class="btn btn-primary btn-full" id="btn-guardar-config" onclick="Admin.guardarConfigConarepesos()">
     <i class="ti ti-device-floppy"></i> Guardar configuración
   </button>
+  <div class="card">
+  <div class="card-title"><i class="ti ti-truck"></i> Flota de camiones</div>
+  <div class="form-group"><label>Nombre del camión</label><input type="text" id="cam-nombre" placeholder="Camión #1"></div>
+  <button class="btn btn-primary btn-full" id="btn-crear-camion" onclick="Admin.crearCamion()">
+    <i class="ti ti-plus"></i> Agregar camión
+  </button>
+  <div class="divider"></div>
+  <div id="camiones-lista"><div class="empty-state">Cargando...</div></div>
+</div>
+
+<div class="card">
+  <div class="card-title"><i class="ti ti-building-warehouse"></i> Ubicación de planta/bodega</div>
+  <div class="card-sub">Punto de partida para calcular las rutas de los camiones.</div>
+  <div class="form-group"><label>Dirección</label><input type="text" id="dep-direccion" placeholder="Av. España 1020, Las Ánimas, Valdivia"></div>
+  <div id="dep-coords-info" style="font-size:12px;color:#666;margin-bottom:10px"></div>
+  <button class="btn btn-primary btn-full" id="btn-guardar-deposito" onclick="Admin.guardarDeposito()">
+    <i class="ti ti-map-pin"></i> Buscar y guardar ubicación
+  </button>
+</div>
   
 </div>
         <div id="admin-panel-urgentes" class="admin-panel">
@@ -3030,6 +3057,7 @@ const Admin = {
 
     Admin._renderClientes(clientes);
     await Admin._renderRutas();
+    await Admin._renderChecklistRutas();
     Admin._renderIngresos(clientes);
     await Admin._renderSolicitudes();
     await Admin._renderPesaje();
@@ -3065,33 +3093,32 @@ const Admin = {
     }).join('');
   },
   async _renderRutas() {
-    const retiros = await DB.getRutasSemana();
+    const retiros = await DB.getRetirosParaOptimizar();
     const content = document.getElementById('admin-rutas-content');
 
     if (!retiros.length) {
-      content.innerHTML = '<div class="empty-state">No hay retiros aprobados esta semana.</div>';
+      content.innerHTML = '<div class="empty-state">No hay retiros pendientes de visitar.</div>';
       return;
     }
 
-    // Agrupa por día
-    const porDia = {};
+    const porCamion = {};
     retiros.forEach(r => {
-      const fecha = new Date(r.fecha_programada).toLocaleDateString('es-CL', { weekday: 'long', day: 'numeric', month: 'long' });
-      if (!porDia[fecha]) porDia[fecha] = [];
-      porDia[fecha].push(r);
+      const key = r.camion_asignado || 'Sin asignar';
+      if (!porCamion[key]) porCamion[key] = [];
+      porCamion[key].push(r);
     });
+    Object.values(porCamion).forEach(arr => arr.sort((a, b) => (a.orden_ruta || 999) - (b.orden_ruta || 999)));
 
-    content.innerHTML = Object.entries(porDia).map(([dia, rets]) => `
+    content.innerHTML = Object.entries(porCamion).map(([camion, rets]) => `
       <div class="route-block">
-        <div class="route-day">${dia}</div>
+        <div class="route-day">${camion}</div>
         ${rets.map(r => `
           <div class="route-stop">
             <div class="route-dot" style="background:#1D9E75"></div>
-            ${r.hora_inicio || '09:00'} · ${r.usuarios?.nombre} ${r.usuarios?.apellido} — ${r.usuarios?.direccion}
+            ${r.orden_ruta ? `${r.orden_ruta}. ` : ''}${r.usuarios?.nombre} ${r.usuarios?.apellido} — ${r.usuarios?.direccion || '—'}
           </div>`).join('')}
       </div>`).join('');
   },
-
   _renderIngresos(clientes) {
     const content = document.getElementById('admin-ingresos-content');
     const porPlan = { basico: 0, estandar: 0, premium: 0 };
@@ -3373,10 +3400,10 @@ Object.assign(DB, {
   async getRetirosParaPesar() {
     const { data: retiros } = await supabase
       .from('retiros')
-      .select('*, usuarios(nombre, apellido)')
-      .not('fotos_enviadas_at', 'is', null)
-      .order('fotos_enviadas_at', { ascending: false })
-      .limit(30);
+      .select('*, usuarios(nombre, apellido, direccion, ciudad, telefono, email)')
+    .not('fotos_enviadas_at', 'is', null)
+    .order('orden_ruta', { ascending: true, nullsFirst: false })
+    .limit(30);
     if (!retiros) return [];
 
     // Marca cuáles ya tienen pesaje registrado
@@ -3709,6 +3736,8 @@ Object.assign(Admin, {
           <input type="number" step="0.1" id="config-pts-${m.material}" value="${m.puntos_por_kg}">
         </div>
       </div>`).join('');
+    await Admin._renderCamiones();
+    await Admin._renderLogistica();
   },
 
   async guardarConfigConarepesos() {
@@ -4165,6 +4194,259 @@ Object.assign(Admin, {
     await Admin._renderOperadores();
     const clientes = await DB.getTodosLosClientes();
     Admin._renderClientes(clientes);
+  },
+});
+  /* Distancia en línea recta entre 2 puntos (en km) */
+function haversine(lat1, lng1, lat2, lng2) {
+  const R = 6371;
+  const dLat = (lat2 - lat1) * Math.PI / 180;
+  const dLng = (lng2 - lng1) * Math.PI / 180;
+  const a = Math.sin(dLat / 2) ** 2 + Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+}
+
+/* Agrupa puntos en k zonas (k = cantidad de camiones activos) */
+function kmeans(points, k, iterations = 15) {
+  if (k <= 1 || points.length <= 1) return [points];
+  let centroids = [];
+  const shuffled = [...points].sort(() => Math.random() - 0.5);
+  for (let i = 0; i < k; i++) centroids.push({ lat: shuffled[i % shuffled.length].lat, lng: shuffled[i % shuffled.length].lng });
+
+  let clusters;
+  for (let iter = 0; iter < iterations; iter++) {
+    clusters = Array.from({ length: k }, () => []);
+    points.forEach(p => {
+      let best = 0, bestDist = Infinity;
+      centroids.forEach((c, i) => {
+        const d = haversine(p.lat, p.lng, c.lat, c.lng);
+        if (d < bestDist) { bestDist = d; best = i; }
+      });
+      clusters[best].push(p);
+    });
+    centroids = clusters.map((c, i) => {
+      if (!c.length) return centroids[i];
+      const lat = c.reduce((s, p) => s + p.lat, 0) / c.length;
+      const lng = c.reduce((s, p) => s + p.lng, 0) / c.length;
+      return { lat, lng };
+    });
+  }
+  return clusters;
+}
+
+/* Ordena las paradas de una zona: siempre visita la más cercana primero */
+function nearestNeighborRoute(points, startLat, startLng) {
+  const remaining = [...points];
+  const route = [];
+  let curLat = startLat, curLng = startLng;
+  while (remaining.length) {
+    let bestIdx = 0, bestDist = Infinity;
+    remaining.forEach((p, i) => {
+      const d = haversine(curLat, curLng, p.lat, p.lng);
+      if (d < bestDist) { bestDist = d; bestIdx = i; }
+    });
+    const next = remaining.splice(bestIdx, 1)[0];
+    route.push(next);
+    curLat = next.lat; curLng = next.lng;
+  }
+  return route;
+}
+  Object.assign(DB, {
+  async getCamiones() {
+    const { data } = await supabase.from('camiones').select('*').eq('activo', true).order('created_at', { ascending: true });
+    return data || [];
+  },
+  async getTodosCamiones() {
+    const { data } = await supabase.from('camiones').select('*').order('created_at', { ascending: true });
+    return data || [];
+  },
+  async getLogisticaConfig() {
+    const { data } = await supabase.from('logistica_config').select('*').eq('id', 1).single();
+    return data;
+  },
+  async getRetirosParaOptimizar() {
+    /* Solo los retiros programados para HOY */
+    const hoy = new Date();
+    const inicio = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate()).toISOString();
+    const fin = new Date(hoy.getFullYear(), hoy.getMonth(), hoy.getDate() + 1).toISOString();
+
+    const { data: retiros } = await supabase
+      .from('retiros')
+      .select('*, usuarios(nombre, apellido, direccion, ciudad, lat, lng)')
+      .not('fotos_enviadas_at', 'is', null)
+      .gte('fecha_programada', inicio)
+      .lt('fecha_programada', fin)
+      .order('created_at', { ascending: true });
+    if (!retiros || !retiros.length) return [];
+    const ids = retiros.map(r => r.id);
+    const { data: yaPesados } = await supabase.from('retiros_materiales').select('retiro_id').in('retiro_id', ids);
+    const pesadosSet = new Set((yaPesados || []).map(m => m.retiro_id));
+    return retiros.filter(r => !pesadosSet.has(r.id));
+  },
+  async actualizarRutaRetiro(id, camion, orden) {
+    const { error } = await supabase.from('retiros').update({ camion_asignado: camion, orden_ruta: orden }).eq('id', id);
+    return { ok: !error, error: error?.message };
+  },
+});
+
+Object.assign(Admin, {
+  _retirosDelDia: [],
+  _seleccionRutas: new Set(),
+
+  async _renderChecklistRutas() {
+    const retiros = await DB.getRetirosParaOptimizar();
+    Admin._retirosDelDia = retiros;
+    Admin._seleccionRutas = new Set(retiros.map(r => r.id));
+    const cont = document.getElementById('rutas-checklist');
+    if (!cont) return;
+    if (!retiros.length) { cont.innerHTML = '<div class="empty-state">No hay retiros programados para hoy.</div>'; return; }
+    cont.innerHTML = retiros.map(r => `
+      <label style="display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:0.5px solid var(--border);cursor:pointer">
+        <input type="checkbox" checked onchange="Admin.toggleSeleccionRuta('${r.id}', this.checked)" style="width:18px;height:18px;flex-shrink:0">
+        <div style="flex:1">
+          <div style="font-weight:500;font-size:13px">${r.usuarios?.nombre} ${r.usuarios?.apellido}</div>
+          <div style="font-size:11px;color:#666">${r.usuarios?.direccion || '—'}, ${r.usuarios?.ciudad || '—'}</div>
+        </div>
+      </label>`).join('');
+  },
+
+  toggleSeleccionRuta(id, marcado) {
+    if (marcado) Admin._seleccionRutas.add(id);
+    else Admin._seleccionRutas.delete(id);
+  },
+
+  async _geocodificar(direccion) {
+    try {
+      const resp = await fetch('/api/geocodificar', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ direccion }),
+      });
+      const data = await resp.json();
+      if (resp.ok && data.lat && data.lng) return { lat: data.lat, lng: data.lng };
+      return null;
+    } catch (err) {
+      return null;
+    }
+  },
+
+  async _renderCamiones() {
+    const camiones = await DB.getTodosCamiones();
+    const lista = document.getElementById('camiones-lista');
+    if (!lista) return;
+    if (!camiones.length) { lista.innerHTML = '<div class="empty-state">Aún no hay camiones agregados.</div>'; return; }
+    lista.innerHTML = camiones.map(c => `
+      <div class="client-row">
+        <div class="client-avatar"><i class="ti ti-truck"></i></div>
+        <div class="client-info">
+          <div class="client-name">${c.nombre} ${c.activo === false ? '<span class="badge badge-gray">Inactivo</span>' : ''}</div>
+        </div>
+        <button class="btn" style="font-size:11px;padding:6px" onclick="Admin.toggleCamion('${c.id}', ${c.activo !== false})">${c.activo === false ? 'Activar' : 'Desactivar'}</button>
+      </div>`).join('');
+  },
+
+  async crearCamion() {
+    const nombre = document.getElementById('cam-nombre')?.value.trim();
+    if (!nombre) { alert('Ingresa un nombre para el camión.'); return; }
+    const { error } = await supabase.from('camiones').insert([{ nombre }]);
+    if (error) { alert('Error: ' + error.message); return; }
+    document.getElementById('cam-nombre').value = '';
+    await Admin._renderCamiones();
+  },
+
+  async toggleCamion(id, estaActivo) {
+    const { error } = await supabase.from('camiones').update({ activo: !estaActivo }).eq('id', id);
+    if (error) { alert('Error: ' + error.message); return; }
+    await Admin._renderCamiones();
+  },
+
+  async _renderLogistica() {
+    const logistica = await DB.getLogisticaConfig();
+    const input = document.getElementById('dep-direccion');
+    const info = document.getElementById('dep-coords-info');
+    if (input && logistica?.deposito_direccion) input.value = logistica.deposito_direccion;
+    if (info && logistica?.deposito_lat) info.textContent = `✓ Ubicación guardada (${logistica.deposito_lat.toFixed(5)}, ${logistica.deposito_lng.toFixed(5)})`;
+  },
+
+  async guardarDeposito() {
+    const direccion = document.getElementById('dep-direccion')?.value.trim();
+    if (!direccion) { alert('Ingresa una dirección.'); return; }
+    const btn = document.getElementById('btn-guardar-deposito');
+    btn.disabled = true;
+    btn.innerHTML = '<div class="spinner"></div> Buscando...';
+
+    const coords = await Admin._geocodificar(direccion);
+
+    btn.disabled = false;
+    btn.innerHTML = '<i class="ti ti-map-pin"></i> Buscar y guardar ubicación';
+
+    if (!coords) { alert('No se pudo encontrar esa dirección en el mapa. Intenta ser más específico (agrega la comuna).'); return; }
+
+    const { error } = await supabase.from('logistica_config').update({
+      deposito_direccion: direccion, deposito_lat: coords.lat, deposito_lng: coords.lng, updated_at: new Date().toISOString(),
+    }).eq('id', 1);
+    if (error) { alert('Error: ' + error.message); return; }
+    document.getElementById('dep-coords-info').textContent = `✓ Ubicación guardada (${coords.lat.toFixed(5)}, ${coords.lng.toFixed(5)})`;
+    alert('Ubicación de la planta guardada correctamente.');
+  },
+
+  async optimizarRutas() {
+    const btn = document.getElementById('btn-optimizar-rutas');
+    if (btn) { btn.disabled = true; btn.innerHTML = '<div class="spinner"></div> Optimizando...'; }
+
+    try {
+      const logistica = await DB.getLogisticaConfig();
+      if (!logistica?.deposito_lat || !logistica?.deposito_lng) {
+        alert('Primero configura la ubicación de tu planta/bodega en Config → "Ubicación de planta/bodega".');
+        return;
+      }
+      const camiones = await DB.getCamiones();
+      if (!camiones.length) {
+        alert('Primero agrega al menos un camión activo en Config → "Flota de camiones".');
+        return;
+      }
+      const retiros = (Admin._retirosDelDia || []).filter(r => Admin._seleccionRutas.has(r.id));
+      if (!retiros.length) {
+        alert('Selecciona al menos un retiro para optimizar (o no hay retiros programados para hoy).');
+        return;
+      }
+
+      for (const r of retiros) {
+        if (!r.usuarios?.lat || !r.usuarios?.lng) {
+          const direccionCompleta = `${r.usuarios?.direccion || ''}, ${r.usuarios?.ciudad || 'Valdivia'}, Chile`;
+          const coords = await Admin._geocodificar(direccionCompleta);
+          if (coords) {
+            r.usuarios.lat = coords.lat;
+            r.usuarios.lng = coords.lng;
+            await supabase.from('usuarios').update({ lat: coords.lat, lng: coords.lng }).eq('id', r.usuario_id);
+          }
+        }
+      }
+
+      const conCoords = retiros.filter(r => r.usuarios?.lat && r.usuarios?.lng);
+      const sinCoords = retiros.filter(r => !r.usuarios?.lat || !r.usuarios?.lng);
+
+      const puntos = conCoords.map(r => ({ ...r, lat: r.usuarios.lat, lng: r.usuarios.lng }));
+      const clusters = kmeans(puntos, camiones.length);
+
+      for (let i = 0; i < clusters.length; i++) {
+        const camion = camiones[i];
+        const ruta = nearestNeighborRoute(clusters[i], logistica.deposito_lat, logistica.deposito_lng);
+        for (let orden = 0; orden < ruta.length; orden++) {
+          await DB.actualizarRutaRetiro(ruta[orden].id, camion.nombre, orden + 1);
+        }
+      }
+
+      let mensaje = `Rutas optimizadas: ${conCoords.length} retiro(s) asignados a ${camiones.length} camión(es).`;
+      if (sinCoords.length) mensaje += `\n\n${sinCoords.length} retiro(s) no se pudieron ubicar en el mapa (dirección no encontrada) y quedaron sin asignar — revísalos manualmente.`;
+      alert(mensaje);
+
+      await Admin._renderRutas();
+      await Admin._renderChecklistRutas();
+    } catch (err) {
+      alert('Error al optimizar: ' + err.message);
+    } finally {
+      if (btn) { btn.disabled = false; btn.innerHTML = '<i class="ti ti-route"></i> Optimizar seleccionados'; }
+    }
   },
 });
 </script>
