@@ -1396,6 +1396,7 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
           <button class="admin-tab" data-tab="canjes" onclick="Admin.tab('canjes', this)">Canjes</button>
           <button class="admin-tab" data-tab="config" onclick="Admin.tab('config', this)">Config</button>
           <button class="admin-tab" data-tab="urgentes" onclick="Admin.tab('urgentes', this)">Urgentes</button>
+          <button class="admin-tab" data-tab="operadores" onclick="Admin.tab('operadores', this)">Operadores</button>
         </div>
         <div id="admin-panel-clientes" class="admin-panel active">
           <div class="card">
@@ -1460,25 +1461,28 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
   <button class="btn btn-primary btn-full" id="btn-guardar-config" onclick="Admin.guardarConfigConarepesos()">
     <i class="ti ti-device-floppy"></i> Guardar configuración
   </button>
-  <div class="card">
-  <div class="card-title"><i class="ti ti-user-plus"></i> Operadores (choferes / peonetas)</div>
-  <div class="row-2">
-    <div class="form-group"><label>Nombre</label><input type="text" id="op-nombre" placeholder="Juan"></div>
-    <div class="form-group"><label>Apellido</label><input type="text" id="op-apellido" placeholder="Pérez"></div>
-  </div>
-  <div class="form-group"><label>Correo</label><input type="email" id="op-email" placeholder="juan@conarehogar.cl"></div>
-  <div class="form-group"><label>Contraseña</label><input type="password" id="op-password" placeholder="Mínimo 8 caracteres"></div>
-  <div id="op-error" class="alert alert-error" style="display:none"></div>
-  <button class="btn btn-primary btn-full" id="btn-crear-operador" onclick="Admin.crearOperador()">
-    <i class="ti ti-user-plus"></i> Crear operador
-  </button>
-  <div class="divider"></div>
-  <div id="operadores-lista"><div class="empty-state">Cargando...</div></div>
-</div>
+  
 </div>
         <div id="admin-panel-urgentes" class="admin-panel">
   <div class="card" id="admin-urgentes-content">
     <!-- Se llena dinámicamente -->
+  </div>
+</div>
+        <div id="admin-panel-operadores" class="admin-panel">
+  <div class="card">
+    <div class="card-title"><i class="ti ti-user-plus"></i> Operadores (choferes / peonetas)</div>
+    <div class="row-2">
+      <div class="form-group"><label>Nombre</label><input type="text" id="op-nombre" placeholder="Juan"></div>
+      <div class="form-group"><label>Apellido</label><input type="text" id="op-apellido" placeholder="Pérez"></div>
+    </div>
+    <div class="form-group"><label>Correo</label><input type="email" id="op-email" placeholder="juan@conarehogar.cl"></div>
+    <div class="form-group"><label>Contraseña</label><input type="password" id="op-password" placeholder="Mínimo 8 caracteres"></div>
+    <div id="op-error" class="alert alert-error" style="display:none"></div>
+    <button class="btn btn-primary btn-full" id="btn-crear-operador" onclick="Admin.crearOperador()">
+      <i class="ti ti-user-plus"></i> Crear operador
+    </button>
+    <div class="divider"></div>
+    <div id="operadores-lista"><div class="empty-state">Cargando...</div></div>
   </div>
 </div>
       </section>
