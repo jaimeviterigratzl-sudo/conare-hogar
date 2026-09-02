@@ -3459,7 +3459,7 @@ Object.assign(DB, {
   async getRetirosParaPesar() {
     const { data: retiros } = await supabase
       .from('retiros')
-      .select('*, usuarios(nombre, apellido, direccion, ciudad, telefono, email)')
+            .select('*, usuarios(nombre, apellido, direccion, ciudad, telefono, email, lat, lng)')
     .not('fotos_enviadas_at', 'is', null)
     .order('orden_ruta', { ascending: true, nullsFirst: false })
     .limit(30);
