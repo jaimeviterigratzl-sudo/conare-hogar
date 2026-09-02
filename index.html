@@ -341,6 +341,9 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
         <span id="app-name">CONARE HOGAR</span>
       </div>
       <div class="topbar-right" id="topbar-right">
+        <div id="admin-preview-banner" style="display:none;background:#FAEEDA;color:#633806;text-align:center;font-size:12px;padding:6px;font-weight:500">
+  <i class="ti ti-eye"></i> Estás viendo la app como la vería un cliente — esta cuenta sigue siendo la de Administrador
+</div>
         <!-- Se llena dinámicamente según el estado del usuario -->
       </div>
     </header>
@@ -1935,6 +1938,8 @@ const DB = {
     const { data, error } = await supabase
       .from('usuarios')
       .select('*, retiros(count)')
+      .neq('email', CONFIG.ADMIN_EMAIL)
+      .eq('es_operador', false)
       .order('created_at', { ascending: false });
     if (error) console.error('getTodosLosClientes:', error);
     return data || [];
@@ -2096,6 +2101,8 @@ const App = {
     window.scrollTo(0, 0);
     document.getElementById('main-content').scrollTop = 0;
     App.renderTopbar();
+    const banner = document.getElementById('admin-preview-banner');
+    if (banner) banner.style.display = (App.state.esAdmin && screen !== 'admin') ? 'block' : 'none';
     // Acciones específicas por pantalla
     if (screen === 'perfil' && App.state.usuario) Perfil.cargar();
     if (screen === 'plan' && App.state.usuario) MiPlan.cargar();
@@ -2111,7 +2118,8 @@ const App = {
 
     const u = App.state.usuario;
     const initials = `${u.nombre?.charAt(0) || ''}${u.apellido?.charAt(0) || ''}`.toUpperCase();
-
+    
+    
     if (App.state.esAdmin) {
       const enAdmin = document.getElementById('scr-admin')?.classList.contains('active');
       right.innerHTML = enAdmin
