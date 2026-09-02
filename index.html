@@ -1588,6 +1588,22 @@ main { flex: 1; overflow-y: auto; min-height: 0; }
     <i class="ti ti-calendar-check"></i> Confirmar fecha y notificar al cliente
   </button>
 </section>
+ <!-- ADMIN: perfil -->
+    <section class="screen" id="scr-perfil-admin" data-screen="perfil-admin">
+      <div class="screen-header">
+        <button class="btn-back" onclick="App.navigate('admin')"><i class="ti ti-arrow-left"></i></button>
+        <h2>Mi cuenta</h2>
+      </div>
+      <div class="card" style="text-align:center;padding:24px">
+        <div class="topbar-avatar" style="background:#E1F5EE;color:#085041;width:64px;height:64px;font-size:22px;margin:0 auto 12px">AD</div>
+        <div style="font-weight:600;font-size:17px" id="pa-nombre">—</div>
+        <div style="font-size:13px;color:#666;margin-top:2px" id="pa-email">—</div>
+        <div style="margin-top:10px"><span class="badge badge-green"><i class="ti ti-shield-check"></i> Administrador</span></div>
+      </div>
+      <button class="btn btn-full" style="margin-top:14px;color:#C62828;border-color:#F0C4C4" onclick="Auth.logout()">
+        <i class="ti ti-logout"></i> Cerrar sesión
+      </button>
+    </section>     
       <!-- OPERADOR: ruta del día -->
 <section class="screen" id="scr-operador" data-screen="operador">
   <div class="screen-header">
@@ -2111,6 +2127,13 @@ const App = {
     if (screen === 'admin') Admin.cargar();
     if (screen === 'home' && App.state.usuario) { Dashboard.cargar(); Conarepesos.cargar(); }
     if (screen === 'canje') Conarepesos.cargar();
+          if (screen === 'perfil-admin' && App.state.usuario) {
+        const u = App.state.usuario;
+        const n = document.getElementById('pa-nombre');
+        const e = document.getElementById('pa-email');
+        if (n) n.textContent = `${u.nombre || ''} ${u.apellido || ''}`.trim() || 'Administrador';
+        if (e) e.textContent = u.email || CONFIG.ADMIN_EMAIL;
+      }
   },
 
   /* Renderiza el topbar según el estado */
@@ -2123,7 +2146,7 @@ const App = {
     
     
     if (App.state.esAdmin) {
-            right.innerHTML = `<div class="topbar-avatar" style="background:#E1F5EE;color:#085041">AD</div>`;
+                  right.innerHTML = `<div class="topbar-avatar" style="background:#E1F5EE;color:#085041;cursor:pointer" onclick="App.navigate('perfil-admin')">AD</div>`;
     } else {
       right.innerHTML = `<div class="topbar-avatar">${initials}</div>`;
     }
