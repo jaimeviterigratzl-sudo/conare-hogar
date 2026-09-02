@@ -2127,7 +2127,16 @@ const App = {
     if (screen === 'admin') Admin.cargar();
     if (screen === 'home' && App.state.usuario) { Dashboard.cargar(); Conarepesos.cargar(); }
     if (screen === 'canje') Conarepesos.cargar();
-          if (screen === 'perfil-admin' && App.state.usuario) {
+          if (screen === 'registro') {
+        const main = document.getElementById('scr-registro');
+        if (main) {
+          main.querySelectorAll('.reg-exito').forEach(el => el.remove());
+          main.querySelectorAll('input').forEach(i => { i.value = ''; });
+        }
+        Registro.planSeleccionado = null;
+        Registro.goStep(1);
+      }      
+    if (screen === 'perfil-admin' && App.state.usuario) {
         const u = App.state.usuario;
         const n = document.getElementById('pa-nombre');
         const e = document.getElementById('pa-email');
@@ -2451,7 +2460,8 @@ const Registro = {
       const regMain = document.getElementById('scr-registro');
       if (regMain) {
         const successDiv = document.createElement('div');
-        successDiv.style.cssText = 'padding:32px 16px;text-align:center';
+                  successDiv.className = 'reg-exito';
+          successDiv.style.cssText = 'padding:32px 16px;text-align:center';
         successDiv.innerHTML = 
           '<div style="width:72px;height:72px;background:#E1F5EE;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px">' +
           '<i class="ti ti-circle-check" style="font-size:38px;color:#1D9E75"></i></div>' +
