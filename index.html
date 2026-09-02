@@ -3105,7 +3105,7 @@ const Admin = {
     lista.innerHTML = clientes.map(c => {
       const plan = CONFIG.PLANES[c.plan] || CONFIG.PLANES.basico;
       const initials = `${c.nombre?.charAt(0) || '?'}${c.apellido?.charAt(0) || ''}`.toUpperCase();
-      const clienteData = JSON.stringify({ id: c.id, nombre: c.nombre, apellido: c.apellido, telefono: c.telefono, direccion: c.direccion, ciudad: c.ciudad, plan: c.plan }).replace(/'/g, "&apos;");
+      const clienteData = JSON.stringify({ id: c.id, email: c.email, nombre: c.nombre, apellido: c.apellido, telefono: c.telefono, direccion: c.direccion, ciudad: c.ciudad, plan: c.plan }).replace(/'/g, "&apos;");
       return `
         <div class="client-row" style="flex-wrap:wrap">
           <div class="client-avatar">${initials}</div>
@@ -4094,6 +4094,7 @@ Object.assign(Admin, {
 
   abrirEditarCliente(cliente) {
     Admin._clienteEditando = cliente;
+    document.getElementById('ec-email').value = cliente.email || '';
     document.getElementById('ec-nombre').value = cliente.nombre || '';
     document.getElementById('ec-apellido').value = cliente.apellido || '';
     document.getElementById('ec-telefono').value = cliente.telefono || '';
